@@ -19,6 +19,13 @@ namespace VietStart_API.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<TeamStartUp> TeamStartUps { get; set; }
         public DbSet<Position> Positions { get; set; }
+        public DbSet<CategoryEmbading> CategoryEmbadings { get; set; }
+        public DbSet<SkillEmbading> SkillEmbadings { get; set; }
+        public DbSet<RoleEmbading> RoleEmbadings { get; set; }
+        public DbSet<UserCategoryEmbading> UserCategoryEmbadings { get; set; }
+        public DbSet<UserSkillEmbading> UserSkillEmbadings { get; set; }
+        public DbSet<UserRoleEmbading> UserRoleEmbadings { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
