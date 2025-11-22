@@ -15,6 +15,8 @@ namespace VietStart_API.Repositories
         private IAppUserRepository _appUserRepository;
         private ITeamStartUpRepository _teamStartUpRepository;
         private IPositionRepository _positionRepository;
+        private ISkillEmbaddingRepository _skillEmbaddingRepository;
+        private IRoleEmbaddingRepository _roleEmbaddingRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -30,6 +32,8 @@ namespace VietStart_API.Repositories
         public IAppUserRepository Users => _appUserRepository ??= new AppUserRepository(_context);
         public ITeamStartUpRepository TeamStartUps => _teamStartUpRepository ??= new TeamStartUpRepository(_context);
         public IPositionRepository Positions => _positionRepository ??= new PositionRepository(_context);
+        public ISkillEmbaddingRepository SkillEmbadings => _skillEmbaddingRepository ??= new SkillEmbaddingRepository(_context);
+        public IRoleEmbaddingRepository RoleEmbadings => _roleEmbaddingRepository ??= new RoleEmbaddingRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

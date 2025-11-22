@@ -357,5 +357,80 @@ namespace VietStart.API.Controllers
                 return StatusCode(500, new { Message = "Lỗi khi tính toán embeddings", Error = ex.Message });
             }
         }
+
+        // GET: api/startups/{id}/suggest-users-grouped
+        [HttpGet("{id}/suggest-users-grouped")]
+        [Authorize(Roles = "Admin,Client")]
+        public async Task<ActionResult<GroupedSuggestionsResponseDto>> SuggestUsersForStartupGrouped(int id)
+        {
+            var startup = await _unitOfWork.StartUps.GetStartUpWithCategoryAsync(id);
+
+            if (startup == null)
+                return NotFound(new { Message = "Startup không tồn tại" });
+
+            Console.WriteLine($"=== Getting grouped suggestions for Startup ID: {id} ===");
+            Console.WriteLine($"Startup Team: {startup.Team}");
+            Console.WriteLine($"Startup TeamEmbedding exists: {!string.IsNullOrEmpty(startup.TeamEmbedding)}");
+
+            // Nếu chưa có embedding, tính ngay
+            bool embeddingUpdated = false;
+            if (string.IsNullOrEmpty(startup.TeamEmbedding))
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(startup.TeamEmbedding) && !string.IsNullOrEmpty(startup.Team))
+                    {
+                        Console.WriteLine("Calculating TeamEmbedding...");
+                        startup.TeamEmbedding = await _embeddingService.GetEmbeddingAsync(startup.Team);
+                        embeddingUpdated = true;
+                        Console.WriteLine($"TeamEmbedding calculated");
+                    }
+
+                    if (embeddingUpdated)
+                    {
+                        await _unitOfWork.StartUps.UpdateAsync(startup);
+                        Console.WriteLine("Embeddings saved to database");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error calculating embeddings: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                }
+            }
+
+            var groupedSuggestions = await _embeddingService.GetGroupedSuggestedUsersForStartupAsync(startup);
+
+            return Ok(new
+            {
+                StartupId = startup.Id,
+                StartupName = startup.Idea,
+                StartupTeam = startup.Team,
+                HasTeamEmbedding = !string.IsNullOrEmpty(startup.TeamEmbedding),
+                GroupedSuggestions = new
+                {
+                    BySkills = new
+                    {
+                        Count = groupedSuggestions.BySkills.Count,
+                        Users = groupedSuggestions.BySkills
+                    },
+                    ByRoles = new
+                    {
+                        Count = groupedSuggestions.ByRoles.Count,
+                        Users = groupedSuggestions.ByRoles
+                    },
+                    ByCategory = new
+                    {
+                        Count = groupedSuggestions.ByCategory.Count,
+                        Users = groupedSuggestions.ByCategory
+                    },
+                    Overall = new
+                    {
+                        Count = groupedSuggestions.Overall.Count,
+                        Users = groupedSuggestions.Overall
+                    }
+                }
+            });
+        }
     }
 }
