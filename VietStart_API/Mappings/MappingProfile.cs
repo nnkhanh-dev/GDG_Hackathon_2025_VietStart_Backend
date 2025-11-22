@@ -65,6 +65,16 @@ namespace VietStart_API.Mappings
             CreateMap<Position, PositionDto>();
             CreateMap<CreatePositionDto, Position>();
             CreateMap<UpdatePositionDto, Position>();
+
+            // SkillEmbadding mappings
+            CreateMap<SkillEmbadding, SkillEmbaddingDto>();
+            CreateMap<CreateSkillEmbaddingDto, SkillEmbadding>();
+            CreateMap<UpdateSkillEmbaddingDto, SkillEmbadding>();
+
+            // RoleEmbadding mappings
+            CreateMap<RoleEmbadding, RoleEmbaddingDto>();
+            CreateMap<CreateRoleEmbaddingDto, RoleEmbadding>();
+            CreateMap<UpdateRoleEmbaddingDto, RoleEmbadding>();
         }
     }
 }

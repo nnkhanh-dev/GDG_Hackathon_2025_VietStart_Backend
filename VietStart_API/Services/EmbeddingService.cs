@@ -250,5 +250,158 @@ namespace VietStart_API.Services
                 return new List<UserSuggestionDto>();
             }
         }
+
+        /// <summary>
+        /// Tìm những người dùng phù hợp nhất cho startup và nhóm theo Skills, Roles, Categories
+        /// </summary>
+        public async Task<GroupedSuggestionsResponseDto> GetGroupedSuggestedUsersForStartupAsync(StartUp startup)
+        {
+            try
+            {
+                // Lấy tất cả users có embedding
+                var users = await _context.Users
+                    .Where(u => u.DeletedAt == null && 
+                                u.Id != startup.UserId && 
+                                (!string.IsNullOrEmpty(u.SkillsEmbadding) || 
+                                 !string.IsNullOrEmpty(u.RolesEmbadding) || 
+                                 !string.IsNullOrEmpty(u.CategoriesEmbadding)))
+                    .ToListAsync();
+
+                if (!users.Any())
+                {
+                    Console.WriteLine("No users found with embeddings");
+                    return new GroupedSuggestionsResponseDto();
+                }
+
+                Console.WriteLine($"Found {users.Count} users to compare for grouped suggestions");
+
+                var groupedUsers = new List<GroupedUserSuggestionDto>();
+
+                // Tính embedding cho category của startup nếu cần
+                string startupCategoryEmbedding = null;
+                if (startup.CategoryId > 0)
+                {
+                    var startupCategory = await _context.Categories
+                        .FirstOrDefaultAsync(c => c.Id == startup.CategoryId);
+                    
+                    if (startupCategory != null)
+                    {
+                        var categoryText = startupCategory.Name;
+                        if (!string.IsNullOrEmpty(startupCategory.Description))
+                        {
+                            categoryText += " " + startupCategory.Description;
+                        }
+                        startupCategoryEmbedding = await GetEmbeddingAsync(categoryText);
+                    }
+                }
+
+                foreach (var user in users)
+                {
+                    double skillScore = 0.0;
+                    double roleScore = 0.0;
+                    double categoryScore = 0.0;
+
+                    // 1. So sánh TeamEmbedding với SkillsEmbadding
+                    if (!string.IsNullOrEmpty(startup.TeamEmbedding) && 
+                        !string.IsNullOrEmpty(user.SkillsEmbadding))
+                    {
+                        skillScore = await CalculateCosineSimilarityAsync(
+                            startup.TeamEmbedding, 
+                            user.SkillsEmbadding);
+                        Console.WriteLine($"User {user.FullName} - Skill similarity: {skillScore:F4}");
+                    }
+
+                    // 2. So sánh TeamEmbedding với RolesEmbadding
+                    if (!string.IsNullOrEmpty(startup.TeamEmbedding) && 
+                        !string.IsNullOrEmpty(user.RolesEmbadding))
+                    {
+                        roleScore = await CalculateCosineSimilarityAsync(
+                            startup.TeamEmbedding, 
+                            user.RolesEmbadding);
+                        Console.WriteLine($"User {user.FullName} - Role similarity: {roleScore:F4}");
+                    }
+
+                    // 3. So sánh Category với CategoriesEmbadding
+                    if (!string.IsNullOrEmpty(startupCategoryEmbedding) && 
+                        !string.IsNullOrEmpty(user.CategoriesEmbadding))
+                    {
+                        categoryScore = await CalculateCosineSimilarityAsync(
+                            startupCategoryEmbedding, 
+                            user.CategoriesEmbadding);
+                        Console.WriteLine($"User {user.FullName} - Category similarity: {categoryScore:F4}");
+                    }
+
+                    // Tính overall score theo trọng số
+                    double overallScore = (skillScore * WEIGHT_SKILLS) + 
+                                         (roleScore * WEIGHT_ROLES) + 
+                                         (categoryScore * WEIGHT_CATEGORIES);
+
+                    Console.WriteLine($"User {user.FullName} - Overall score: {overallScore:F4}");
+
+                    // Thêm vào danh sách nếu có ít nhất 1 điểm > 0
+                    if (skillScore > 0 || roleScore > 0 || categoryScore > 0)
+                    {
+                        groupedUsers.Add(new GroupedUserSuggestionDto
+                        {
+                            UserId = user.Id,
+                            FullName = user.FullName,
+                            Email = user.Email,
+                            Avatar = user.Avatar,
+                            Bio = user.Bio,
+                            Location = user.Location,
+                            Skills = user.Skills,
+                            RolesInStartup = user.RolesInStartup,
+                            SkillMatchScore = Math.Round(skillScore * 100, 2),
+                            RoleMatchScore = Math.Round(roleScore * 100, 2),
+                            CategoryMatchScore = Math.Round(categoryScore * 100, 2),
+                            OverallScore = Math.Round(overallScore * 100, 2)
+                        });
+                    }
+                }
+
+                Console.WriteLine($"Found {groupedUsers.Count} users with scores");
+
+                // Nhóm và sắp xếp theo từng tiêu chí
+                var response = new GroupedSuggestionsResponseDto
+                {
+                    // Top 10 theo Skills
+                    BySkills = groupedUsers
+                        .Where(u => u.SkillMatchScore > 0)
+                        .OrderByDescending(u => u.SkillMatchScore)
+                        .Take(50)
+                        .ToList(),
+
+                    // Top 10 theo Roles
+                    ByRoles = groupedUsers
+                        .Where(u => u.RoleMatchScore > 0)
+                        .OrderByDescending(u => u.RoleMatchScore)
+                        .Take(50)
+                        .ToList(),
+
+                    // Top 10 theo Category
+                    ByCategory = groupedUsers
+                        .Where(u => u.CategoryMatchScore > 0)
+                        .OrderByDescending(u => u.CategoryMatchScore)
+                        .Take(50)
+                        .ToList(),
+
+                    // Top 20 theo Overall (tổng hợp)
+                    Overall = groupedUsers
+                        .OrderByDescending(u => u.OverallScore)
+                        .Take(50)
+                        .ToList()
+                };
+
+                Console.WriteLine($"Grouped suggestions - Skills: {response.BySkills.Count}, Roles: {response.ByRoles.Count}, Category: {response.ByCategory.Count}, Overall: {response.Overall.Count}");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting grouped suggested users: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return new GroupedSuggestionsResponseDto();
+            }
+        }
     }
 }

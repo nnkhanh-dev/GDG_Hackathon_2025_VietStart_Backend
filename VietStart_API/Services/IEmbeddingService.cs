@@ -8,5 +8,6 @@ namespace VietStart_API.Services
         Task<string> GetEmbeddingAsync(string text);
         Task<double> CalculateCosineSimilarityAsync(string embedding1, string embedding2);
         Task<List<UserSuggestionDto>> GetSuggestedUsersForStartupAsync(StartUp startup);
+        Task<GroupedSuggestionsResponseDto> GetGroupedSuggestedUsersForStartupAsync(StartUp startup);
     }
 }

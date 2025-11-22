@@ -11,6 +11,8 @@ namespace VietStart_API.Repositories
         IAppUserRepository Users { get; }
         ITeamStartUpRepository TeamStartUps { get; }
         IPositionRepository Positions { get; }
+        ISkillEmbaddingRepository SkillEmbadings { get; }
+        IRoleEmbaddingRepository RoleEmbadings { get; }
         
         Task<int> SaveChangesAsync();
     }
