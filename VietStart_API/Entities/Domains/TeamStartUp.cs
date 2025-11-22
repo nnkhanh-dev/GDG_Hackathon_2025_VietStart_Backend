@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using VietStart_API.Enums;
 
 namespace VietStart_API.Entities.Domains
 {
@@ -9,7 +10,7 @@ namespace VietStart_API.Entities.Domains
         public int Id { get; set; }
         public int StartUpId { get; set; }
         public string UserId { get; set; }    
-        public string Status { get; set; } // Trạng thái tham gia (đang chờ, đã chấp nhận, từ chối)
+        public TeamStartUpStatus Status { get; set; } = TeamStartUpStatus.Pending; // Trạng thái: Pending, Dealing, Success, Rejected
 
         [ForeignKey(nameof(UserId))]
         public AppUser User { get; set; }
