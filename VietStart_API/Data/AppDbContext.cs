@@ -19,7 +19,6 @@ namespace VietStart_API.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<TeamStartUp> TeamStartUps { get; set; }
         public DbSet<Position> Positions { get; set; }
-        public DbSet<CategoryEmbadding> CategoryEmbadings { get; set; }
         public DbSet<SkillEmbadding> SkillEmbadings { get; set; }
         public DbSet<RoleEmbadding> RoleEmbadings { get; set; }
 

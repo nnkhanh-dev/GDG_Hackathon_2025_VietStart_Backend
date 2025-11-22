@@ -15,10 +15,27 @@ namespace VietStart_API.Entities.DTO
 
     public class UpdateAppUserDto
     {
-        public string FullName { get; set; }
-        public string Location { get; set; }
-        public string Bio { get; set; }
-        public string Avatar { get; set; }
+        public string? FullName { get; set; }
+        public string? Location { get; set; }
+        public string? Bio { get; set; }
+        public string? Avatar { get; set; }
         public DateTime? DOB { get; set; }
+        public string? Skills { get; set; }
+        public string? RolesInStartup { get; set; }
+        public string? CategoryInvests { get; set; }
+    }
+
+    public class UserSuggestionDto
+    {
+        public string UserId { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Avatar { get; set; }
+        public string Bio { get; set; }
+        public string Location { get; set; }
+        public string Skills { get; set; }
+        public string RolesInStartup { get; set; }
+        public double MatchScore { get; set; }
+        public Dictionary<string, double> MatchDetails { get; set; }
     }
 }

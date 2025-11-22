@@ -21,5 +21,9 @@ namespace VietStart_API.Entities.DTO
         [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu.")]
         [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
         public string ConfirmPassword { get; set; }
+
+        public string? Skills { get; set; }
+        public string? RolesInStartup { get; set; }
+        public string? CategoryInvests { get; set; }
     }
 }

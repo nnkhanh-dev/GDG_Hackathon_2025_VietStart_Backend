@@ -5,6 +5,7 @@ using System.Security.Claims;
 using VietStart_API.Entities.Domains;
 using VietStart_API.Entities.DTO;
 using VietStart_API.Repositories;
+using VietStart_API.Services;
 
 namespace VietStart.API.Controllers
 {
@@ -14,11 +15,13 @@ namespace VietStart.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IEmbeddingService _embeddingService;
 
-        public StartupsController(IUnitOfWork unitOfWork, IMapper mapper)
+        public StartupsController(IUnitOfWork unitOfWork, IMapper mapper, IEmbeddingService embeddingService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _embeddingService = embeddingService;
         }
 
         // GET: api/startups
@@ -137,6 +140,21 @@ namespace VietStart.API.Controllers
             startup.CreatedAt = DateTime.UtcNow;
             startup.CreatedBy = userId;
 
+            // Tính embedding đồng bộ cho startup
+            try
+            {
+                // Embedding cho Team
+                if (!string.IsNullOrEmpty(startup.Team))
+                {
+                    startup.TeamEmbedding = await _embeddingService.GetEmbeddingAsync(startup.Team);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating embeddings: {ex.Message}");
+                // Tiếp tục tạo startup ngay cả khi embedding lỗi
+            }
+
             await _unitOfWork.StartUps.AddAsync(startup);
 
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
@@ -249,6 +267,95 @@ namespace VietStart.API.Controllers
             }).ToList();
 
             return Ok(startupDtos);
+        }
+
+        // GET: api/startups/{id}/suggest-users
+        [HttpGet("{id}/suggest-users")]
+        [Authorize(Roles = "Admin,Client")]
+        public async Task<ActionResult<IEnumerable<UserSuggestionDto>>> SuggestUsersForStartup(int id)
+        {
+            var startup = await _unitOfWork.StartUps.GetStartUpWithCategoryAsync(id);
+
+            if (startup == null)
+                return NotFound(new { Message = "Startup không tồn tại" });
+
+            Console.WriteLine($"=== Suggesting users for Startup ID: {id} ===");
+            Console.WriteLine($"Startup Team: {startup.Team}");
+            Console.WriteLine($"Startup TeamEmbedding exists: {!string.IsNullOrEmpty(startup.TeamEmbedding)}");
+
+            // Nếu chưa có embedding, tính ngay
+            bool embeddingUpdated = false;
+            if (string.IsNullOrEmpty(startup.TeamEmbedding))
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(startup.TeamEmbedding) && !string.IsNullOrEmpty(startup.Team))
+                    {
+                        Console.WriteLine("Calculating TeamEmbedding...");
+                        startup.TeamEmbedding = await _embeddingService.GetEmbeddingAsync(startup.Team);
+                        embeddingUpdated = true;
+                        Console.WriteLine($"TeamEmbedding calculated: {startup.TeamEmbedding?.Substring(0, Math.Min(100, startup.TeamEmbedding.Length))}...");
+                    }
+
+                    if (embeddingUpdated)
+                    {
+                        await _unitOfWork.StartUps.UpdateAsync(startup);
+                        Console.WriteLine("Embeddings saved to database");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error calculating embeddings: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                }
+            }
+
+            var suggestions = await _embeddingService.GetSuggestedUsersForStartupAsync(startup);
+
+            return Ok(new
+            {
+                StartupId = startup.Id,
+                StartupName = startup.Idea,
+                StartupTeam = startup.Team,
+                HasTeamEmbedding = !string.IsNullOrEmpty(startup.TeamEmbedding),
+                TotalSuggestions = suggestions.Count,
+                Suggestions = suggestions
+            });
+        }
+
+        // POST: api/startups/{id}/recalculate-embeddings
+        [HttpPost("{id}/recalculate-embeddings")]
+        [Authorize(Roles = "Admin,Client")]
+        public async Task<IActionResult> RecalculateStartupEmbeddings(int id)
+        {
+            var startup = await _unitOfWork.StartUps.GetStartUpWithCategoryAsync(id);
+
+            if (startup == null)
+                return NotFound(new { Message = "Startup không tồn tại" });
+
+            try
+            {
+                // Tính lại TeamEmbedding
+                if (!string.IsNullOrEmpty(startup.Team))
+                {
+                    Console.WriteLine($"Recalculating TeamEmbedding for: {startup.Team}");
+                    startup.TeamEmbedding = await _embeddingService.GetEmbeddingAsync(startup.Team);
+                }
+
+                await _unitOfWork.StartUps.UpdateAsync(startup);
+
+                return Ok(new
+                {
+                    Message = "Embeddings đã được tính lại thành công",
+                    StartupId = startup.Id,
+                    HasTeamEmbedding = !string.IsNullOrEmpty(startup.TeamEmbedding)
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error recalculating embeddings: {ex.Message}");
+                return StatusCode(500, new { Message = "Lỗi khi tính toán embeddings", Error = ex.Message });
+            }
         }
     }
 }

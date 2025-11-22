@@ -73,5 +73,14 @@ namespace VietStart_API.Repositories
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<StartUp> GetStartUpWithCategoryAsync(int id)
+        {
+            return await _dbSet
+                .Where(s => s.Id == id && s.DeletedAt == null)
+                .Include(s => s.Category)
+                .Include(s => s.AppUser)
+                .FirstOrDefaultAsync();
+        }
     }
 }

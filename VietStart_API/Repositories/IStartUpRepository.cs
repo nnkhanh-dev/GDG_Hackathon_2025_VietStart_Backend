@@ -7,5 +7,6 @@ namespace VietStart_API.Repositories
         Task<StartUp> GetStartUpWithDetailsAsync(int id);
         Task<IEnumerable<StartUp>> GetUserStartupsAsync(string userId);
         Task<IEnumerable<StartUp>> GetStartupsByCategoryAsync(int categoryId);
+        Task<StartUp> GetStartUpWithCategoryAsync(int id);
     }
 }

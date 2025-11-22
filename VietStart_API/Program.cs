@@ -7,6 +7,7 @@ using System.Text;
 using VietStart_API.Data;
 using VietStart_API.Entities.Domains;
 using VietStart_API.Repositories;
+using VietStart_API.Services;
 using AutoMapper;
 
 
@@ -71,6 +72,9 @@ builder.Services.AddScoped<ITeamStartUpRepository, TeamStartUpRepository>();
 builder.Services.AddScoped<IPositionRepository, PositionRepository>();
 
 builder.Services.AddScoped<ITokenReposity, TokenRepository>();
+
+// Add Services
+builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);

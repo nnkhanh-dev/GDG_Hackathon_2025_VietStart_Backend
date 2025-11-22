@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using VietStart_API.Entities.Domains;
 using VietStart_API.Entities.DTO;
 using VietStart_API.Repositories;
+using VietStart_API.Services;
 
 namespace VietStart_API.Controllers
 {
@@ -17,12 +18,14 @@ namespace VietStart_API.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ITokenReposity _tokenRepository;
+        private readonly IEmbeddingService _embeddingService;
 
-        public AuthController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, ITokenReposity token)
+        public AuthController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, ITokenReposity token, IEmbeddingService embeddingService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _tokenRepository = token;
+            _embeddingService = embeddingService;
         }
 
         [HttpPost]
@@ -34,6 +37,9 @@ namespace VietStart_API.Controllers
                 UserName = requestDto.Email,
                 Email = requestDto.Email,
                 FullName = requestDto.FullName,
+                Skills = requestDto.Skills ?? "",
+                RolesInStartup = requestDto.RolesInStartup ?? "",
+                CategoryInvests = requestDto.CategoryInvests ?? "",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -49,6 +55,40 @@ namespace VietStart_API.Controllers
 
                 // Gán role cho user
                 await _userManager.AddToRoleAsync(user, "Client");
+
+                // Tính embedding đồng bộ ngay khi đăng ký (nếu có dữ liệu)
+                try
+                {
+                    bool hasEmbeddings = false;
+
+                    if (!string.IsNullOrEmpty(user.Skills))
+                    {
+                        user.SkillsEmbadding = await _embeddingService.GetEmbeddingAsync(user.Skills);
+                        hasEmbeddings = true;
+                    }
+                    if (!string.IsNullOrEmpty(user.RolesInStartup))
+                    {
+                        user.RolesEmbadding = await _embeddingService.GetEmbeddingAsync(user.RolesInStartup);
+                        hasEmbeddings = true;
+                    }
+                    if (!string.IsNullOrEmpty(user.CategoryInvests))
+                    {
+                        user.CategoriesEmbadding = await _embeddingService.GetEmbeddingAsync(user.CategoryInvests);
+                        hasEmbeddings = true;
+                    }
+
+                    // Chỉ update nếu có embedding được tính
+                    if (hasEmbeddings)
+                    {
+                        await _userManager.UpdateAsync(user);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error calculating embeddings during registration: {ex.Message}");
+                    // Vẫn cho phép đăng ký thành công ngay cả khi embedding lỗi
+                }
+
                 return Ok(new { Message = "User registered successfully." });
             }
             else
