@@ -8,6 +8,12 @@ namespace VietStart_API.Entities.Domains
         public string? Location { get; set; }
         public string? Bio { get; set; }
         public string? Avatar { get; set; }
+        public string? SkillsEmbadding { get; set; }
+        public string? RolesEmbadding { get; set; }
+        public string? CategoriesEmbadding { get; set; }
+        public string? ProjectSkillsEmbadding { get; set; }
+        public string? ProjectRolesEmbadding { get; set; }
+        public string? ProjectCategoriesEmbadding { get; set; }
         public DateTime? DOB { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
