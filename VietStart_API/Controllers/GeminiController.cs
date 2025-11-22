@@ -1112,58 +1112,95 @@ JSON OUTPUT:
 
             var example = System.IO.File.ReadAllText(filePath);
 
+            // ============================================================
+            // PROMPT – GENESIS MENTOR (CREATIVE MODE)
+            // ============================================================
             string prompt = $@"
-Bạn là mentor startup, phân tích và đưa gợi ý cải thiện cho từng lĩnh vực.
+Bạn là ""Genesis Mentor"" phiên bản CREATIVE MODE.
+Nhiệm vụ: Nhận 5 trường (Idea, Team, Prototype, Plan, Relationships), phân tích toàn diện, phản biện mạnh, tháo rời ý tưởng và tái kiến trúc thành phiên bản tốt hơn gấp nhiều lần.
 
-📊 THÔNG TIN STARTUP:
-Team: {(string.IsNullOrWhiteSpace(info.Team) ? "[THIẾU]" : info.Team)}
-Idea: {(string.IsNullOrWhiteSpace(info.Idea) ? "[THIẾU]" : info.Idea)}
-Prototype: {(string.IsNullOrWhiteSpace(info.Prototype) ? "[THIẾU]" : info.Prototype)}
-Plan: {(string.IsNullOrWhiteSpace(info.Plan) ? "[THIẾU]" : info.Plan)}
-Relationships: {(string.IsNullOrWhiteSpace(info.Relationships) ? "[THIẾU]" : info.Relationships)}
+Bạn được phép:
+• Lật ngược vấn đề, tái định nghĩa Pain Point
+• Chuyển ý tưởng từ mô hình nhỏ sang hệ sinh thái/platform (nếu hợp lý)
+• Đề xuất giải pháp 10X (tốt hơn cái cũ gấp 10 lần)
+• Tìm blindspot mà founder không thấy
+• “Đập đi xây lại” nếu cần, miễn hợp lý và khả thi (>= 30%)
+• Áp dụng reverse-engineering giữa 5 trụ: Idea ↔ Team ↔ Prototype ↔ Plan ↔ Relationships
 
-📌 VÍ DỤ:
+Bạn KHÔNG được:
+• Lặp lại input của user
+• Trả lời chung chung, kiểu sách giáo khoa
+• Đưa ra lời khuyên mơ hồ hoặc thiếu logic
+• Viết luận dài, mỗi mục phải 250-350 ký tự, sắc nét
+
+--------------------------
+### INPUT
+Team: {(string.IsNullOrWhiteSpace(info.Team) ? "[TRỐNG]" : info.Team)}
+Idea: {(string.IsNullOrWhiteSpace(info.Idea) ? "[TRỐNG]" : info.Idea)}
+Prototype: {(string.IsNullOrWhiteSpace(info.Prototype) ? "[TRỐNG]" : info.Prototype)}
+Plan: {(string.IsNullOrWhiteSpace(info.Plan) ? "[TRỐNG]" : info.Plan)}
+Relationships: {(string.IsNullOrWhiteSpace(info.Relationships) ? "[TRỐNG]" : info.Relationships)}
+
+### DATASET THAM CHIẾU:
 {example}
 
-⚙️ YÊU CẦU:
-• Phân tích liên kết giữa các trường
-• Đưa gợi ý cụ thể, khả thi
-• Nếu thiếu thông tin → gợi ý bổ sung
-• Nếu đã có → gợi ý cải thiện
+--------------------------
+### NHIỆM VỤ PHÂN TÍCH
+Với mỗi mục, hãy làm:
 
-GỢI Ý CHO 5 LĨNH VỰC:
+1. IDEA:
+   • Xác định lại Pain Point theo góc nhìn thực dụng
+   • Đặt câu hỏi phản biện: “Có người thật sự đau không?”
+   • Đề xuất USP mạnh hơn gấp 10 lần so với phiên bản hiện tại
+   • Nếu idea hiện tại là vitamin → chuyển thành thuốc giảm đau
 
-1️⃣ Team: Phân tích kỹ năng hiện có, đề xuất vai trò cần bổ sung phù hợp với Idea/Prototype
+2. TEAM:
+   • Đánh giá Tam giác: Hacker – Hustler – Hipster
+   • Kiểm tra khoảng trống kỹ năng dựa trên Idea
+   • Nếu Team mismatch → đề xuất tuyển/thuê/partner rõ vai trò
+   • Cảnh báo Bus Factor
 
-2️⃣ Idea: Đánh giá khả thi, đề xuất cải tiến dựa trên Team/Market
+3. PROTOTYPE:
+   • Xóa tính năng thừa, giữ 1 core-flow duy nhất
+   • Đề xuất MVP siêu tối giản: Low-fi, No-code nếu hợp lý
+   • Thu nhỏ phạm vi test: chỉ 1 nhóm, 1 khu vực, 1 hành vi
 
-3️⃣ Prototype: Gợi ý features và tech stack phù hợp với Team/Plan
+4. PLAN:
+   • Phân tách: MVP (0-3 tháng) → Market Fit (3-6 tháng) → Scale
+   • Chỉ rõ rủi ro timeline → áp dụng quy tắc 2X
+   • Gợi ý KPIs đơn giản, đo lường được
 
-4️⃣ Plan: Đề xuất roadmap và milestones dựa trên Prototype/Resources
+5. RELATIONSHIPS:
+   • Chỉ ra những Stakeholders có thể giết chết hoặc kích nổ dự án
+   • Xác định Early Adopters thật, không phải tưởng tượng
+   • Chỉ ra partner chiến lược (AI, data, hạ tầng, phân phối…)
+   • Nhắc đến pháp lý/NDA khi liên quan tài nguyên đầu vào
 
-5️⃣ Relationships: Gợi ý partners/investors cụ thể phù hợp với domain
+--------------------------
+### OUTPUT
+Chỉ trả về 1 JSON Object hợp lệ, không markdown, không mô tả thêm:
 
-JSON OUTPUT (chỉ trả JSON, không markdown):
 {{
-    ""Team"": ""gợi ý team (200-300 ký tự)"",
-    ""Idea"": ""gợi ý idea (200-300 ký tự)"",
-    ""Prototype"": ""gợi ý prototype (200-300 ký tự)"",
-    ""Plan"": ""gợi ý plan (200-300 ký tự)"",
-    ""Relationships"": ""gợi ý relationships (200-300 ký tự)""
+    ""Idea"": ""..."",
+    ""Team"": ""..."",
+    ""Prototype"": ""..."",
+    ""Plan"": ""..."",
+    ""Relationships"": ""...""
 }}
 ";
 
+            // Build request
             var requestBody = new
             {
                 contents = new[]
                 {
-                    new { parts = new[] { new { text = prompt } } }
-                }
+            new { parts = new[] { new { text = prompt } } }
+        }
             };
 
             var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-            // Retry khi gặp 503
+            // Retry 503 logic
             int maxRetries = 3;
             int delayMs = 2000;
             HttpResponseMessage? response = null;
@@ -1171,8 +1208,7 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
             for (int i = 0; i < maxRetries; i++)
             {
                 response = await _httpClient.PostAsync(_geminiUrl, content);
-                if (response.IsSuccessStatusCode)
-                    break;
+                if (response.IsSuccessStatusCode) break;
 
                 if ((int)response.StatusCode == 503)
                     await Task.Delay(delayMs);
@@ -1181,8 +1217,10 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
             }
 
             if (response == null || !response.IsSuccessStatusCode)
-                return StatusCode((int)(response?.StatusCode ?? HttpStatusCode.InternalServerError), await response!.Content.ReadAsStringAsync());
+                return StatusCode((int)(response?.StatusCode ?? HttpStatusCode.InternalServerError),
+                    await response!.Content.ReadAsStringAsync());
 
+            // Parse JSON
             var jsonResponse = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(jsonResponse);
 
@@ -1195,7 +1233,10 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
                 .GetProperty("text")
                 .GetString() ?? "";
 
-            string cleanedJson = resultText.Replace("```json", "").Replace("```", "").Trim();
+            string cleanedJson = resultText
+                .Replace("```json", "")
+                .Replace("```", "")
+                .Trim();
 
             StartupInfo suggestions;
             try
@@ -1204,7 +1245,12 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
             }
             catch (Exception ex)
             {
-                return BadRequest(new { error = "Failed to parse Gemini response", details = ex.Message, raw = cleanedJson });
+                return BadRequest(new
+                {
+                    error = "Failed to parse Gemini response",
+                    details = ex.Message,
+                    raw = cleanedJson
+                });
             }
 
             return Ok(new
@@ -1213,5 +1259,6 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
                 suggestions
             });
         }
+
     }
 }
