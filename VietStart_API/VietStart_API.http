@@ -1,0 +1,6 @@
+@VietStart_API_HostAddress = http://localhost:5247
+
+GET {{VietStart_API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
