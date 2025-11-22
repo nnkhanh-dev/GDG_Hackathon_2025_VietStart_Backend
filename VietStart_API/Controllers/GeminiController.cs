@@ -14,64 +14,63 @@ namespace VietStart.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly IWebHostEnvironment _environment;
+        private readonly string _geminiUrl;
 
         public GeminiController(IConfiguration configuration, HttpClient httpClient, IWebHostEnvironment environment)
         {
             _configuration = configuration;
             _httpClient = httpClient;
             _environment = environment;
+            
+            string apiKey = _configuration["Gemini:Key"];
+            _geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
         }
 
-        [HttpPost("format")]
+        [HttpPost("CheckInput")]
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> FormatInput([FromBody] string clientAnswer)
+        public async Task<IActionResult> CheckInput([FromBody] string clientAnswer)
         {
             if (string.IsNullOrWhiteSpace(clientAnswer))
                 return BadRequest("clientAnswer cannot be empty.");
 
-            string apiKey = _configuration["Gemini:Key"];
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
-
-
             // BƯỚC 1: Kiểm tra vi phạm pháp luật
             string validationPrompt = @"
-🚨 NHIỆM VỤ KIỂM TRA VI PHẠM:
-Bạn là chuyên gia pháp lý startup Việt Nam. Phân tích input và kiểm tra xem startup có vi phạm:
+                        🚨 NHIỆM VỤ KIỂM TRA VI PHẠM:
+                        Bạn là chuyên gia pháp lý startup Việt Nam. Phân tích input và kiểm tra xem startup có vi phạm:
 
-❌ VI PHẠM PHÁP LUẬT:
-• Kinh doanh cá độ, cờ bạc, casino online
-• Đa cấp, ponzi, lừa đảo tài chính
-• Tiền ảo, cryptocurrency không được cấp phép
-• Vũ khí, ma túy, chất cấm
-• Nội dung đồi trụy, khiêu dâm
-• Vi phạm bản quyền rõ ràng
-• Bán hàng cấm (thuốc lá điện tử, thuốc không phép)
-• Phá hoại an ninh quốc gia, phân biệt chủng tộc
+                        ❌ VI PHẠM PHÁP LUẬT:
+                        • Kinh doanh cá độ, cờ bạc, casino online
+                        • Đa cấp, ponzi, lừa đảo tài chính
+                        • Tiền ảo, cryptocurrency không được cấp phép
+                        • Vũ khí, ma túy, chất cấm
+                        • Nội dung đồi trụy, khiêu dâm
+                        • Vi phạm bản quyền rõ ràng
+                        • Bán hàng cấm (thuốc lá điện tử, thuốc không phép)
+                        • Phá hoại an ninh quốc gia, phân biệt chủng tộc
 
-❌ VI PHẠM QUY CHUẨN:
-• Thiếu giấy phép bắt buộc (y tế, tài chính, giáo dục)
-• Tuyên bố y tế không có chứng cứ
-• Lừa dối khách hàng rõ ràng
-• Thông tin sai lệch nghiêm trọng
+                        ❌ VI PHẠM QUY CHUẨN:
+                        • Thiếu giấy phép bắt buộc (y tế, tài chính, giáo dục)
+                        • Tuyên bố y tế không có chứng cứ
+                        • Lừa dối khách hàng rõ ràng
+                        • Thông tin sai lệch nghiêm trọng
 
-⚙️ QUY TẮC:
-✓ Chỉ trả về JSON
-✓ Nếu VI PHẠM: isValid = false, message = lý do cụ thể
-✓ Nếu HỢP LỆ: isValid = true, message = ""
+                        ⚙️ QUY TẮC:
+                        ✓ Chỉ trả về JSON
+                        ✓ Nếu VI PHẠM: isValid = false, message = lý do cụ thể
+                        ✓ Nếu HỢP LỆ: isValid = true, message = ""
 
-INPUT: " + clientAnswer + @"
+                        INPUT: " + clientAnswer + @"
 
-JSON OUTPUT:
-{
-    ""isValid"": true/false,
-    ""message"": ""lý do vi phạm (nếu có)""
-}
-";
-
+                        JSON OUTPUT:
+                        {
+                            ""isValid"": true/false,
+                            ""message"": ""lý do vi phạm (nếu có)""
+                        }
+                        ";
             var validationRequestBody = new
             {
                 contents = new[]
-                {
+               {
                     new {
                         parts = new[] { new { text = validationPrompt } }
                     }
@@ -79,7 +78,7 @@ JSON OUTPUT:
             };
 
             var validationContent = new StringContent(JsonSerializer.Serialize(validationRequestBody), Encoding.UTF8, "application/json");
-            var validationResponse = await _httpClient.PostAsync(url, validationContent);
+            var validationResponse = await _httpClient.PostAsync(_geminiUrl, validationContent);
 
             if (!validationResponse.IsSuccessStatusCode)
                 return StatusCode((int)validationResponse.StatusCode, await validationResponse.Content.ReadAsStringAsync());
@@ -96,18 +95,18 @@ JSON OUTPUT:
                         .GetString() ?? "";
 
                     string cleanedValidationJson = validationResultText.Replace("```json", "").Replace("```", "").Trim();
-                    
+
                     try
                     {
                         var validationResult = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(cleanedValidationJson);
-                        if (validationResult != null && 
-                            validationResult.TryGetValue("isValid", out var isValidElement) && 
+                        if (validationResult != null &&
+                            validationResult.TryGetValue("isValid", out var isValidElement) &&
                             !isValidElement.GetBoolean())
                         {
-                            string violationMessage = validationResult.TryGetValue("message", out var msgElement) 
-                                ? msgElement.GetString() ?? "Startup vi phạm quy định" 
+                            string violationMessage = validationResult.TryGetValue("message", out var msgElement)
+                                ? msgElement.GetString() ?? "Startup vi phạm quy định"
                                 : "Startup vi phạm quy định";
-                            return BadRequest(new { error = violationMessage });
+                            return BadRequest(new {success = false , message = violationMessage });
                         }
                     }
                     catch
@@ -116,6 +115,16 @@ JSON OUTPUT:
                     }
                 }
             }
+
+            return Ok(new { success = false,  message = "Input hợp lệ" });
+        }
+
+        [HttpPost("format")]
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> FormatInput([FromBody] string clientAnswer)
+        {
+            if (string.IsNullOrWhiteSpace(clientAnswer))
+                return BadRequest("clientAnswer cannot be empty.");
 
             // BƯỚC 2: Format thông tin startup
             string prompt = @"
@@ -166,7 +175,7 @@ INPUT: " + clientAnswer + @"
 
             for (int i = 0; i < maxRetries; i++)
             {
-                response = await _httpClient.PostAsync(url, content);
+                response = await _httpClient.PostAsync(_geminiUrl, content);
                 if (response.IsSuccessStatusCode)
                     break;
 
@@ -217,9 +226,6 @@ INPUT: " + clientAnswer + @"
         {
             if (info == null)
                 return BadRequest("Startup info cannot be null.");
-
-            string apiKey = _configuration["Gemini:Key"];
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
 
             string prompt = $@"
 Bạn là chuyên gia đầu tư startup early-stage tại Việt Nam.
@@ -945,7 +951,7 @@ JSON OUTPUT:
 
             for (int i = 0; i < maxRetries; i++)
             {
-                response = await _httpClient.PostAsync(url, content);
+                response = await _httpClient.PostAsync(_geminiUrl, content);
                 if (response.IsSuccessStatusCode)
                     break;
 
@@ -993,9 +999,6 @@ JSON OUTPUT:
         {
             if (info == null)
                 return BadRequest("Startup info cannot be null.");
-
-            string apiKey = _configuration["Gemini:Key"];
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
 
             string prompt = @"
 Bạn là cố vấn startup kỳ cựu, chuyên sửa & viết lại profile startup để phục vụ pitch nhà đầu tư.
@@ -1049,7 +1052,7 @@ JSON OUTPUT:
 
             for (int i = 0; i < maxRetries; i++)
             {
-                response = await _httpClient.PostAsync(url, content);
+                response = await _httpClient.PostAsync(_geminiUrl, content);
                 if (response.IsSuccessStatusCode)
                     break;
 
@@ -1099,9 +1102,6 @@ JSON OUTPUT:
         {
             if (info == null)
                 return BadRequest("Startup info cannot be null.");
-
-            string apiKey = _configuration["Gemini:Key"];
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
 
             var filePath = Path.Combine(_environment.ContentRootPath, "Data", "DataSuggest.json");
 
@@ -1170,7 +1170,7 @@ JSON OUTPUT (chỉ trả JSON, không markdown):
 
             for (int i = 0; i < maxRetries; i++)
             {
-                response = await _httpClient.PostAsync(url, content);
+                response = await _httpClient.PostAsync(_geminiUrl, content);
                 if (response.IsSuccessStatusCode)
                     break;
 
