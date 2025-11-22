@@ -9,6 +9,8 @@ namespace VietStart_API.Entities.Domains
         [Key]
         public int Id { get; set; }
         public string Team { get; set; }
+        public string? TeamEmbedding { get; set; }
+        public string? CategoryEmbedding { get; set; }
         public string Idea { get; set; }
         public string Prototype { get; set; }
         public string Plan { get; set; }
