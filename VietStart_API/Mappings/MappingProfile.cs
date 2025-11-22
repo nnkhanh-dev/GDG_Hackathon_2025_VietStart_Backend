@@ -54,8 +54,7 @@ namespace VietStart_API.Mappings
             CreateMap<TeamStartUp, TeamStartUpDto>()
                 .ForMember(dest => dest.StartUpIdea, opt => opt.MapFrom(src => src.StartUp.Idea))
                 .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User.FullName))
-                .ForMember(dest => dest.UserAvatar, opt => opt.MapFrom(src => src.User.Avatar))
-                .ForMember(dest => dest.PositionName, opt => opt.MapFrom(src => src.Position.Name));
+                .ForMember(dest => dest.UserAvatar, opt => opt.MapFrom(src => src.User.Avatar));
 
             CreateMap<TeamStartUp, TeamStartUpDetailDto>();
             CreateMap<CreateTeamStartUpDto, TeamStartUp>();

@@ -10,7 +10,6 @@ namespace VietStart_API.Repositories
         IStartUpMediaRepository StartUpMedias { get; }
         IAppUserRepository Users { get; }
         ITeamStartUpRepository TeamStartUps { get; }
-        IPositionRepository Positions { get; }
         ISkillEmbaddingRepository SkillEmbadings { get; }
         IRoleEmbaddingRepository RoleEmbadings { get; }
         

@@ -227,8 +227,12 @@ namespace VietStart_API.Services
                             Avatar = user.Avatar,
                             Bio = user.Bio,
                             Location = user.Location,
+                            DOB = user.DOB,
                             Skills = user.Skills,
                             RolesInStartup = user.RolesInStartup,
+                            CategoryInvests = user.CategoryInvests,
+                            CreatedAt = user.CreatedAt,
+                            UpdatedAt = user.UpdatedAt,
                             MatchScore = Math.Round(totalScore * 100, 2), // Chuyển sang %
                             MatchDetails = details
                         });
@@ -349,8 +353,12 @@ namespace VietStart_API.Services
                             Avatar = user.Avatar,
                             Bio = user.Bio,
                             Location = user.Location,
+                            DOB = user.DOB,
                             Skills = user.Skills,
                             RolesInStartup = user.RolesInStartup,
+                            CategoryInvests = user.CategoryInvests,
+                            CreatedAt = user.CreatedAt,
+                            UpdatedAt = user.UpdatedAt,
                             SkillMatchScore = Math.Round(skillScore * 100, 2),
                             RoleMatchScore = Math.Round(roleScore * 100, 2),
                             CategoryMatchScore = Math.Round(categoryScore * 100, 2),

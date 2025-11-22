@@ -113,12 +113,7 @@ namespace VietStart_API.Data
                 .WithMany()
                 .HasForeignKey(t => t.StartUpId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<TeamStartUp>()
-                .HasOne(t => t.Position)
-                .WithMany()
-                .HasForeignKey(t => t.PositionId)
-                .OnDelete(DeleteBehavior.Restrict);
+       
         }
     }
 }

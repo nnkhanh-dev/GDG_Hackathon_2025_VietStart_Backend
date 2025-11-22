@@ -69,7 +69,6 @@ builder.Services.AddScoped<IShareRepository, ShareRepository>();
 builder.Services.AddScoped<IStartUpMediaRepository, StartUpMediaRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 builder.Services.AddScoped<ITeamStartUpRepository, TeamStartUpRepository>();
-builder.Services.AddScoped<IPositionRepository, PositionRepository>();
 
 builder.Services.AddScoped<ITokenReposity, TokenRepository>();
 

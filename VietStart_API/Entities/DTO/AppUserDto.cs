@@ -33,8 +33,12 @@ namespace VietStart_API.Entities.DTO
         public string Avatar { get; set; }
         public string Bio { get; set; }
         public string Location { get; set; }
+        public DateTime? DOB { get; set; }
         public string Skills { get; set; }
         public string RolesInStartup { get; set; }
+        public string CategoryInvests { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public double MatchScore { get; set; }
         public Dictionary<string, double> MatchDetails { get; set; }
     }
@@ -47,8 +51,12 @@ namespace VietStart_API.Entities.DTO
         public string Avatar { get; set; }
         public string Bio { get; set; }
         public string Location { get; set; }
+        public DateTime? DOB { get; set; }
         public string Skills { get; set; }
         public string RolesInStartup { get; set; }
+        public string CategoryInvests { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public double SkillMatchScore { get; set; }
         public double RoleMatchScore { get; set; }
         public double CategoryMatchScore { get; set; }

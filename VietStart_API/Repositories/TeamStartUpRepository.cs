@@ -16,7 +16,6 @@ namespace VietStart_API.Repositories
                 .Include(t => t.User)
                 .Include(t => t.StartUp)
                     .ThenInclude(s => s.Category)
-                .Include(t => t.Position)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -24,7 +23,6 @@ namespace VietStart_API.Repositories
         {
             return await _dbSet
                 .Include(t => t.User)
-                .Include(t => t.Position)
                 .Where(t => t.StartUpId == startUpId)
                 .ToListAsync();
         }
@@ -34,7 +32,6 @@ namespace VietStart_API.Repositories
             return await _dbSet
                 .Include(t => t.StartUp)
                     .ThenInclude(s => s.Category)
-                .Include(t => t.Position)
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.Id)
                 .ToListAsync();
@@ -45,8 +42,23 @@ namespace VietStart_API.Repositories
             return await _dbSet
                 .Include(t => t.User)
                 .Include(t => t.StartUp)
-                .Include(t => t.Position)
                 .Where(t => t.Status == status)
+                .ToListAsync();
+        }
+
+        public async Task<TeamStartUp?> GetPendingRequestAsync(int startUpId, string userId)
+        {
+            return await _dbSet
+                .FirstOrDefaultAsync(t => t.StartUpId == startUpId && 
+                                         t.UserId == userId && 
+                                         t.Status == "Pending");
+        }
+
+        public async Task<IEnumerable<TeamStartUp>> GetPendingRequestsByStartUpIdAsync(int startUpId)
+        {
+            return await _dbSet
+                .Include(t => t.User)
+                .Where(t => t.StartUpId == startUpId && t.Status == "Pending")
                 .ToListAsync();
         }
     }
