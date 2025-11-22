@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VietStart_API.Data;
 using VietStart_API.Entities.Domains;
+using VietStart_API.Enums;
 
 namespace VietStart_API.Repositories
 {
@@ -23,7 +24,9 @@ namespace VietStart_API.Repositories
         {
             return await _dbSet
                 .Include(t => t.User)
+                .Include(t => t.StartUp)
                 .Where(t => t.StartUpId == startUpId)
+                .OrderByDescending(t => t.Id)
                 .ToListAsync();
         }
 
@@ -32,17 +35,19 @@ namespace VietStart_API.Repositories
             return await _dbSet
                 .Include(t => t.StartUp)
                     .ThenInclude(s => s.Category)
+                .Include(t => t.User)
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.Id)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TeamStartUp>> GetTeamStartUpsByStatusAsync(string status)
+        public async Task<IEnumerable<TeamStartUp>> GetTeamStartUpsByStatusAsync(TeamStartUpStatus status)
         {
             return await _dbSet
                 .Include(t => t.User)
                 .Include(t => t.StartUp)
                 .Where(t => t.Status == status)
+                .OrderByDescending(t => t.Id)
                 .ToListAsync();
         }
 
@@ -51,14 +56,15 @@ namespace VietStart_API.Repositories
             return await _dbSet
                 .FirstOrDefaultAsync(t => t.StartUpId == startUpId && 
                                          t.UserId == userId && 
-                                         t.Status == "Pending");
+                                         t.Status == TeamStartUpStatus.Pending);
         }
 
         public async Task<IEnumerable<TeamStartUp>> GetPendingRequestsByStartUpIdAsync(int startUpId)
         {
             return await _dbSet
                 .Include(t => t.User)
-                .Where(t => t.StartUpId == startUpId && t.Status == "Pending")
+                .Where(t => t.StartUpId == startUpId && t.Status == TeamStartUpStatus.Pending)
+                .OrderByDescending(t => t.Id)
                 .ToListAsync();
         }
     }

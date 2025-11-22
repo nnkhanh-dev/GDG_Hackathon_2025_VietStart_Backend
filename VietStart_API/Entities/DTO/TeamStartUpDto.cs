@@ -1,3 +1,5 @@
+using VietStart_API.Enums;
+
 namespace VietStart_API.Entities.DTO
 {
     public class TeamStartUpDto
@@ -8,7 +10,12 @@ namespace VietStart_API.Entities.DTO
         public string UserId { get; set; }
         public string UserFullName { get; set; }
         public string UserAvatar { get; set; }
-        public string Status { get; set; }
+        public TeamStartUpStatus Status { get; set; }
+        
+        // Owner information
+        public string StartupOwnerId { get; set; }
+        public string StartupOwnerName { get; set; }
+        public string StartupOwnerAvatar { get; set; }
     }
 
     public class TeamStartUpDetailDto
@@ -16,7 +23,7 @@ namespace VietStart_API.Entities.DTO
         public int Id { get; set; }
         public int StartUpId { get; set; }
         public string UserId { get; set; }
-        public string Status { get; set; }
+        public TeamStartUpStatus Status { get; set; }
 
         // Related entities
         public AppUserDto User { get; set; }
@@ -32,17 +39,16 @@ namespace VietStart_API.Entities.DTO
     {
         public int StartUpId { get; set; }
         public string UserId { get; set; }
-        public string Status { get; set; } = "Pending"; // Default status
     }
 
     public class UpdateTeamStartUpDto
     {
-        public string Status { get; set; }
+        public TeamStartUpStatus Status { get; set; }
     }
 
     public class UpdateJoinRequestStatusDto
     {
-        public string Status { get; set; } // "Accepted" or "Rejected"
+        public TeamStartUpStatus Status { get; set; }
         public string? Reason { get; set; }
     }
 

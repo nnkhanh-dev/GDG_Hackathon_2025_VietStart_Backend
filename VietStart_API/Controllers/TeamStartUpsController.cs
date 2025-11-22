@@ -5,6 +5,7 @@ using System.Security.Claims;
 using VietStart_API.Entities.DTO;
 using VietStart_API.Entities.Domains;
 using VietStart_API.Repositories;
+using VietStart_API.Enums;
 
 namespace VietStart.API.Controllers
 {
@@ -21,109 +22,72 @@ namespace VietStart.API.Controllers
             _mapper = mapper;
         }
 
-        // POST: api/teamstartups/request-join
-        // User yêu cầu join vào một startup
-        [Authorize(Roles = "Client")]
-        [HttpPost("request-join")]
-        public async Task<ActionResult> RequestJoinStartup([FromBody] SendJoinRequestDto requestDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var startUp = await _unitOfWork.StartUps.GetByIdAsync(requestDto.StartUpId);
-            if (startUp == null)
-                return BadRequest(new { Message = "StartUp không tồn tại" });
-
-            if (startUp.UserId == userId)
-                return BadRequest(new { Message = "Bạn không thể gửi yêu cầu vào startup của chính mình" });
-
-            var existingRequest = await _unitOfWork.TeamStartUps.FirstOrDefaultAsync(
-                t => t.StartUpId == requestDto.StartUpId && 
-                     t.UserId == userId &&
-                     (t.Status == "Pending" || t.Status == "Accepted"));
-
-            if (existingRequest != null)
-            {
-                if (existingRequest.Status == "Accepted")
-                    return BadRequest(new { Message = "Bạn đã là thành viên của startup này" });
-                return BadRequest(new { Message = "Bạn đã gửi yêu cầu tham gia startup này rồi" });
-            }
-
-            var teamStartUp = new TeamStartUp
-            {
-                StartUpId = requestDto.StartUpId,
-                UserId = userId,
-                Status = "Pending"
-            };
-
-            await _unitOfWork.TeamStartUps.AddAsync(teamStartUp);
-
-            return Ok(new { Message = "Gửi yêu cầu tham gia thành công" });
-        }
-
         // POST: api/teamstartups/invite
-        // User gửi lời mời cho user khác vào startup của mình
+        // Chủ startup gửi lời mời chiêu mộ cho user khác
         [Authorize(Roles = "Client")]
         [HttpPost("invite")]
         public async Task<ActionResult> InviteUserToStartup([FromBody] CreateTeamStartUpDto inviteDto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
 
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             var startUp = await _unitOfWork.StartUps.GetByIdAsync(inviteDto.StartUpId);
             if (startUp == null)
                 return BadRequest(new { Message = "StartUp không tồn tại" });
 
             if (startUp.UserId != ownerId)
-                return Forbid();
+                return StatusCode(403, new { Message = "Bạn không có quyền gửi lời mời cho startup này" });
 
             var user = await _unitOfWork.Users.GetByIdAsync(inviteDto.UserId);
             if (user == null)
                 return BadRequest(new { Message = "User không tồn tại" });
 
-            var existingMember = await _unitOfWork.TeamStartUps.FirstOrDefaultAsync(
+            // Kiểm tra duplicate invitation
+            var existingInvite = await _unitOfWork.TeamStartUps.FirstOrDefaultAsync(
                 t => t.StartUpId == inviteDto.StartUpId && 
                      t.UserId == inviteDto.UserId &&
-                     (t.Status == "Pending" || t.Status == "Accepted"));
+                     (t.Status == TeamStartUpStatus.Pending || 
+                      t.Status == TeamStartUpStatus.Dealing || 
+                      t.Status == TeamStartUpStatus.Success));
 
-            if (existingMember != null)
+            if (existingInvite != null)
             {
-                if (existingMember.Status == "Accepted")
+                if (existingInvite.Status == TeamStartUpStatus.Success)
                     return BadRequest(new { Message = "User đã là thành viên của startup này" });
-                return BadRequest(new { Message = "User đã có lời mời từ startup này" });
+                if (existingInvite.Status == TeamStartUpStatus.Dealing)
+                    return BadRequest(new { Message = "Đang trong quá trình trao đổi với user này" });
+                return BadRequest(new { Message = "Đã có lời mời đang chờ xử lý" });
             }
 
             var teamStartUp = new TeamStartUp
             {
                 StartUpId = inviteDto.StartUpId,
                 UserId = inviteDto.UserId,
-                Status = inviteDto.Status ?? "Pending"
+                Status = TeamStartUpStatus.Pending
             };
 
             await _unitOfWork.TeamStartUps.AddAsync(teamStartUp);
 
-            return Ok(new { Message = "Gửi lời mời thành công" });
+            return Ok(new { Message = "Gửi lời mời chiêu mộ thành công" });
         }
 
-        // GET: api/teamstartups/pending-requests
-        // Lấy danh sách yêu cầu join đang chờ cho các startup của mình
+        // GET: api/teamstartups/sent-invites
+        // Lấy danh sách lời mời đã gửi của các startup của mình (Người gửi lời mời)
         [Authorize(Roles = "Client")]
-        [HttpGet("pending-requests")]
-        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetPendingRequests([FromQuery] int? startUpId = null)
+        [HttpGet("sent-invites")]
+        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetSentInvites(
+            [FromQuery] int? startUpId = null,
+            [FromQuery] TeamStartUpStatus? status = null)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
-            IEnumerable<TeamStartUp> pendingRequests;
+            IEnumerable<TeamStartUp> invites;
 
             if (startUpId.HasValue)
             {
@@ -132,22 +96,24 @@ namespace VietStart.API.Controllers
                     return NotFound(new { Message = "StartUp không tồn tại" });
 
                 if (startUp.UserId != ownerId)
-                    return Forbid();
+                    return StatusCode(403, new { Message = "Bạn không có quyền xem lời mời của startup này" });
 
-                pendingRequests = await _unitOfWork.TeamStartUps.GetPendingRequestsByStartUpIdAsync(startUpId.Value);
+                invites = await _unitOfWork.TeamStartUps.GetTeamStartUpsByStartUpIdAsync(startUpId.Value);
             }
             else
             {
-                // Lấy tất cả startup của owner
                 var myStartups = await _unitOfWork.StartUps.GetAllAsync(s => s.UserId == ownerId);
                 var startupIds = myStartups.Select(s => s.Id).ToList();
-
-                // Lấy tất cả pending requests cho các startup đó
-                var allRequests = await _unitOfWork.TeamStartUps.GetTeamStartUpsByStatusAsync("Pending");
-                pendingRequests = allRequests.Where(t => startupIds.Contains(t.StartUpId));
+                var allInvites = await _unitOfWork.TeamStartUps.GetAllAsync(t => startupIds.Contains(t.StartUpId));
+                invites = allInvites;
             }
 
-            var requestDtos = pendingRequests.Select(t => new TeamStartUpDto
+            if (status.HasValue)
+                invites = invites.Where(t => t.Status == status.Value);
+
+            var owner = await _unitOfWork.Users.GetByIdAsync(ownerId);
+            
+            var inviteDtos = invites.Select(t => new TeamStartUpDto
             {
                 Id = t.Id,
                 StartUpId = t.StartUpId,
@@ -155,77 +121,187 @@ namespace VietStart.API.Controllers
                 UserId = t.UserId,
                 UserFullName = t.User?.FullName ?? "",
                 UserAvatar = t.User?.Avatar,
-                Status = t.Status
+                Status = t.Status,
+                StartupOwnerId = ownerId,
+                StartupOwnerName = owner?.FullName ?? "",
+                StartupOwnerAvatar = owner?.Avatar
             }).ToList();
 
-            return Ok(new { Data = requestDtos, Total = requestDtos.Count });
+            return Ok(new { Data = inviteDtos, Total = inviteDtos.Count });
         }
 
-        // PUT: api/teamstartups/{id}/accept
-        // Chấp nhận người đã gửi yêu cầu vào startup của mình
+        // GET: api/teamstartups/received-invites
+        // Lấy danh sách lời mời nhận được (Người được gửi lời mời)
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/accept")]
-        public async Task<IActionResult> AcceptRequest(int id)
+        [HttpGet("received-invites")]
+        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetReceivedInvites([FromQuery] TeamStartUpStatus? status = null)
         {
-            var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
+
+            var invites = await _unitOfWork.TeamStartUps.GetTeamStartUpsByUserIdAsync(userId);
+
+            if (status.HasValue)
+                invites = invites.Where(t => t.Status == status.Value);
+
+            var inviteDtos = new List<TeamStartUpDto>();
+            
+            foreach (var t in invites)
+            {
+                var startUp = t.StartUp ?? await _unitOfWork.StartUps.GetByIdAsync(t.StartUpId);
+                var owner = startUp != null ? await _unitOfWork.Users.GetByIdAsync(startUp.UserId) : null;
+                
+                inviteDtos.Add(new TeamStartUpDto
+                {
+                    Id = t.Id,
+                    StartUpId = t.StartUpId,
+                    StartUpIdea = startUp?.Idea ?? "",
+                    UserId = t.UserId,
+                    UserFullName = t.User?.FullName ?? "",
+                    UserAvatar = t.User?.Avatar,
+                    Status = t.Status,
+                    StartupOwnerId = startUp?.UserId ?? "",
+                    StartupOwnerName = owner?.FullName ?? "",
+                    StartupOwnerAvatar = owner?.Avatar
+                });
+            }
+
+            return Ok(new { Data = inviteDtos, Total = inviteDtos.Count });
+        }
+
+        // PUT: api/teamstartups/{id}/accept-invite
+        // Người được mời đồng ý lời mời → chuyển sang trạng thái Dealing (bắt đầu nhắn tin)
+        [Authorize(Roles = "Client")]
+        [HttpPut("{id}/accept-invite")]
+        public async Task<IActionResult> AcceptInvite(int id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
             if (teamStartUp == null)
-                return NotFound(new { Message = "Yêu cầu không tồn tại" });
+                return NotFound(new { Message = "Lời mời không tồn tại" });
 
-            var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
-            if (startUp?.UserId != ownerId)
-                return Forbid();
+            if (teamStartUp.UserId != userId)
+                return StatusCode(403, new { Message = "Bạn không có quyền chấp nhận lời mời này" });
 
-            if (teamStartUp.Status != "Pending")
-                return BadRequest(new { Message = "Yêu cầu này đã được xử lý" });
+            if (teamStartUp.Status != TeamStartUpStatus.Pending)
+                return BadRequest(new { Message = "Lời mời này không ở trạng thái chờ xử lý" });
 
-            teamStartUp.Status = "Accepted";
+            teamStartUp.Status = TeamStartUpStatus.Dealing;
             await _unitOfWork.TeamStartUps.UpdateAsync(teamStartUp);
 
-            return Ok(new { Message = "Đã chấp nhận yêu cầu tham gia" });
+            return Ok(new { 
+                Message = "Đã chấp nhận lời mời. Bây giờ bạn có thể nhắn tin trao đổi với chủ startup",
+                Status = (int)TeamStartUpStatus.Dealing 
+            });
         }
 
-        // PUT: api/teamstartups/{id}/reject
-        // Từ chối người đã gửi yêu cầu vào startup của mình
+        // PUT: api/teamstartups/{id}/reject-invite
+        // Người được mời từ chối lời mời
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/reject")]
-        public async Task<IActionResult> RejectRequest(int id, [FromBody] UpdateJoinRequestStatusDto? rejectDto = null)
+        [HttpPut("{id}/reject-invite")]
+        public async Task<IActionResult> RejectInvite(int id, [FromBody] UpdateJoinRequestStatusDto? rejectDto = null)
         {
-            var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
             if (teamStartUp == null)
-                return NotFound(new { Message = "Yêu cầu không tồn tại" });
+                return NotFound(new { Message = "Lời mời không tồn tại" });
 
-            var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
-            if (startUp?.UserId != ownerId)
-                return Forbid();
+            if (teamStartUp.UserId != userId)
+                return StatusCode(403, new { Message = "Bạn không có quyền từ chối lời mời này" });
 
-            if (teamStartUp.Status != "Pending")
-                return BadRequest(new { Message = "Yêu cầu này đã được xử lý" });
+            if (teamStartUp.Status != TeamStartUpStatus.Pending)
+                return BadRequest(new { Message = "Lời mời này không ở trạng thái chờ xử lý" });
 
-            teamStartUp.Status = "Rejected";
+            teamStartUp.Status = TeamStartUpStatus.Rejected;
             await _unitOfWork.TeamStartUps.UpdateAsync(teamStartUp);
 
-            return Ok(new { Message = "Đã từ chối yêu cầu tham gia", Reason = rejectDto?.Reason });
+            return Ok(new { 
+                Message = "Đã từ chối lời mời", 
+                Reason = rejectDto?.Reason,
+                Status = (int)TeamStartUpStatus.Rejected 
+            });
         }
 
-        // GET: api/teamstartups/my-startups-members
-        // Lấy danh sách user của một hoặc nhiều startup của mình
+        // PUT: api/teamstartups/{id}/confirm-success
+        // Chủ startup xác nhận thành công → người được mời vào nhóm chat chung
         [Authorize(Roles = "Client")]
-        [HttpGet("my-startups-members")]
-        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetMyStartupsMembers(
-            [FromQuery] int? startUpId = null,
-            [FromQuery] string? status = "Accepted")
+        [HttpPut("{id}/confirm-success")]
+        public async Task<IActionResult> ConfirmSuccess(int id)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
+
+            var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
+            if (teamStartUp == null)
+                return NotFound(new { Message = "Lời mời không tồn tại" });
+
+            var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
+            if (startUp?.UserId != ownerId)
+                return StatusCode(403, new { Message = "Bạn không có quyền xác nhận lời mời này" });
+
+            if (teamStartUp.Status != TeamStartUpStatus.Dealing)
+                return BadRequest(new { Message = "Chỉ có thể xác nhận thành công khi đang ở trạng thái Dealing" });
+
+            teamStartUp.Status = TeamStartUpStatus.Success;
+            await _unitOfWork.TeamStartUps.UpdateAsync(teamStartUp);
+
+            // TODO: Thêm logic để thêm user vào nhóm chat chung của startup
+            // Frontend sẽ tự tạo group chat room trên Firebase
+
+            return Ok(new { 
+                Message = "Đã xác nhận thành công. Thành viên đã được thêm vào nhóm chat",
+                Status = (int)TeamStartUpStatus.Success 
+            });
+        }
+
+        // PUT: api/teamstartups/{id}/cancel-dealing
+        // Chủ startup hủy bỏ quá trình trao đổi và chuyển về Rejected
+        [Authorize(Roles = "Client")]
+        [HttpPut("{id}/cancel-dealing")]
+        public async Task<IActionResult> CancelDealing(int id, [FromBody] UpdateJoinRequestStatusDto? cancelDto = null)
+        {
+            var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
+
+            var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
+            if (teamStartUp == null)
+                return NotFound(new { Message = "Lời mời không tồn tại" });
+
+            var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
+            if (startUp?.UserId != ownerId)
+                return StatusCode(403, new { Message = "Bạn không có quyền hủy lời mời này" });
+
+            if (teamStartUp.Status != TeamStartUpStatus.Dealing)
+                return BadRequest(new { Message = "Chỉ có thể hủy khi đang ở trạng thái Dealing" });
+
+            teamStartUp.Status = TeamStartUpStatus.Rejected;
+            await _unitOfWork.TeamStartUps.UpdateAsync(teamStartUp);
+
+            return Ok(new { 
+                Message = "Đã hủy bỏ quá trình trao đổi", 
+                Reason = cancelDto?.Reason,
+                Status = (int)TeamStartUpStatus.Rejected 
+            });
+        }
+
+        // GET: api/teamstartups/my-team-members
+        // Lấy danh sách thành viên đã thành công (Success) của startup
+        [Authorize(Roles = "Client")]
+        [HttpGet("my-team-members")]
+        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetMyTeamMembers([FromQuery] int? startUpId = null)
+        {
+            var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             IEnumerable<TeamStartUp> members;
 
@@ -236,7 +312,7 @@ namespace VietStart.API.Controllers
                     return NotFound(new { Message = "StartUp không tồn tại" });
 
                 if (startUp.UserId != ownerId)
-                    return Forbid();
+                    return StatusCode(403, new { Message = "Bạn không có quyền xem thành viên của startup này" });
 
                 members = await _unitOfWork.TeamStartUps.GetTeamStartUpsByStartUpIdAsync(startUpId.Value);
             }
@@ -244,13 +320,13 @@ namespace VietStart.API.Controllers
             {
                 var myStartups = await _unitOfWork.StartUps.GetAllAsync(s => s.UserId == ownerId);
                 var startupIds = myStartups.Select(s => s.Id).ToList();
-
                 var allMembers = await _unitOfWork.TeamStartUps.GetAllAsync(t => startupIds.Contains(t.StartUpId));
                 members = allMembers;
             }
 
-            if (!string.IsNullOrEmpty(status))
-                members = members.Where(t => t.Status == status);
+            members = members.Where(t => t.Status == TeamStartUpStatus.Success);
+
+            var owner = await _unitOfWork.Users.GetByIdAsync(ownerId);
 
             var memberDtos = members.Select(t => new TeamStartUpDto
             {
@@ -260,21 +336,24 @@ namespace VietStart.API.Controllers
                 UserId = t.UserId,
                 UserFullName = t.User?.FullName ?? "",
                 UserAvatar = t.User?.Avatar,
-                Status = t.Status
+                Status = t.Status,
+                StartupOwnerId = ownerId,
+                StartupOwnerName = owner?.FullName ?? "",
+                StartupOwnerAvatar = owner?.Avatar
             }).ToList();
 
             return Ok(new { Data = memberDtos, Total = memberDtos.Count });
         }
 
-        // DELETE: api/teamstartups/{id}/remove
-        // Xóa thành viên khỏi startup của mình
+        // DELETE: api/teamstartups/{id}/remove-member
+        // Chủ startup xóa thành viên khỏi nhóm
         [Authorize(Roles = "Client")]
-        [HttpDelete("{id}/remove")]
+        [HttpDelete("{id}/remove-member")]
         public async Task<IActionResult> RemoveMember(int id)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerId))
-                return Unauthorized();
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
             if (teamStartUp == null)
@@ -282,65 +361,84 @@ namespace VietStart.API.Controllers
 
             var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
             if (startUp?.UserId != ownerId)
-                return Forbid();
+                return StatusCode(403, new { Message = "Bạn không có quyền xóa thành viên này" });
+
+            // TODO: Thêm logic để xóa user khỏi nhóm chat (hoặc để frontend làm)
 
             await _unitOfWork.TeamStartUps.DeleteAsync(teamStartUp);
 
             return Ok(new { Message = "Đã xóa thành viên khỏi startup" });
         }
 
-        // GET: api/teamstartups/my-requests
-        // Xem các yêu cầu tham gia đã gửi của mình
+        // DELETE: api/teamstartups/{id}/cancel-invite
+        // Chủ startup hủy lời mời đã gửi (khi còn ở trạng thái Pending)
         [Authorize(Roles = "Client")]
-        [HttpGet("my-requests")]
-        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetMyRequests([FromQuery] string? status = null)
+        [HttpDelete("{id}/cancel-invite")]
+        public async Task<IActionResult> CancelInvite(int id)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var requests = await _unitOfWork.TeamStartUps.GetTeamStartUpsByUserIdAsync(userId);
-
-            if (!string.IsNullOrEmpty(status))
-                requests = requests.Where(t => t.Status == status);
-
-            var requestDtos = requests.Select(t => new TeamStartUpDto
-            {
-                Id = t.Id,
-                StartUpId = t.StartUpId,
-                StartUpIdea = t.StartUp?.Idea ?? "",
-                UserId = t.UserId,
-                UserFullName = t.User?.FullName ?? "",
-                UserAvatar = t.User?.Avatar,
-                Status = t.Status
-            }).ToList();
-
-            return Ok(new { Data = requestDtos, Total = requestDtos.Count });
-        }
-
-        // DELETE: api/teamstartups/{id}/cancel-request
-        // Hủy yêu cầu tham gia đã gửi
-        [Authorize(Roles = "Client")]
-        [HttpDelete("{id}/cancel-request")]
-        public async Task<IActionResult> CancelRequest(int id)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+            var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
 
             var teamStartUp = await _unitOfWork.TeamStartUps.GetByIdAsync(id);
             if (teamStartUp == null)
-                return NotFound(new { Message = "Yêu cầu không tồn tại" });
+                return NotFound(new { Message = "Lời mời không tồn tại" });
 
-            if (teamStartUp.UserId != userId)
-                return Forbid();
+            var startUp = await _unitOfWork.StartUps.GetByIdAsync(teamStartUp.StartUpId);
+            if (startUp?.UserId != ownerId)
+                return StatusCode(403, new { Message = "Bạn không có quyền hủy lời mời này" });
 
-            if (teamStartUp.Status != "Pending")
-                return BadRequest(new { Message = "Chỉ có thể hủy yêu cầu đang chờ xử lý" });
+            if (teamStartUp.Status != TeamStartUpStatus.Pending)
+                return BadRequest(new { Message = "Chỉ có thể hủy lời mời khi còn ở trạng thái Pending" });
 
             await _unitOfWork.TeamStartUps.DeleteAsync(teamStartUp);
 
-            return Ok(new { Message = "Đã hủy yêu cầu tham gia" });
+            return Ok(new { Message = "Đã hủy lời mời" });
+        }
+
+        // GET: api/teamstartups/dealing-chats
+        // Lấy danh sách các cuộc trao đổi đang Dealing (cho cả chủ startup và người được mời)
+        [Authorize(Roles = "Client")]
+        [HttpGet("dealing-chats")]
+        public async Task<ActionResult<IEnumerable<TeamStartUpDto>>> GetDealingChats()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Không xác định được người dùng" });
+
+            // Lấy các startup của user
+            var myStartups = await _unitOfWork.StartUps.GetAllAsync(s => s.UserId == userId);
+            var startupIds = myStartups.Select(s => s.Id).ToList();
+
+            // Lấy các lời mời mà user là chủ startup hoặc người được mời, có trạng thái Dealing
+            var dealingInvites = await _unitOfWork.TeamStartUps.GetAllAsync(
+                t => (startupIds.Contains(t.StartUpId) || t.UserId == userId) && 
+                     t.Status == TeamStartUpStatus.Dealing);
+
+            var chatDtos = new List<TeamStartUpDto>();
+            
+            foreach (var t in dealingInvites)
+            {
+                var startUp = t.StartUp ?? await _unitOfWork.StartUps.GetByIdAsync(t.StartUpId);
+                var owner = startUp != null ? await _unitOfWork.Users.GetByIdAsync(startUp.UserId) : null;
+                var user = t.User ?? await _unitOfWork.Users.GetByIdAsync(t.UserId);
+                
+                chatDtos.Add(new TeamStartUpDto
+                {
+                    Id = t.Id,
+                    StartUpId = t.StartUpId,
+                    StartUpIdea = startUp?.Idea ?? "",
+                    UserId = t.UserId,
+                    UserFullName = user?.FullName ?? "",
+                    UserAvatar = user?.Avatar,
+                    Status = t.Status,
+                    StartupOwnerId = startUp?.UserId ?? "",
+                    StartupOwnerName = owner?.FullName ?? "",
+                    StartupOwnerAvatar = owner?.Avatar
+                });
+            }
+
+            return Ok(new { Data = chatDtos, Total = chatDtos.Count });
         }
     }
 }
