@@ -2,7 +2,7 @@
 
 namespace VietStart_API.Entities.Domains
 {
-    public class SkillEmbading
+    public class RoleEmbadding
     {
         [Key]
         public int Id { get; set; }
