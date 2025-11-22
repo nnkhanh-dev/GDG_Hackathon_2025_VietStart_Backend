@@ -1,0 +1,92 @@
+[
+  {
+    "startupId": "SUGGEST-004",
+    "description": "Edtech - học tiếng Anh online cho trẻ em",
+    "Input": {
+      "Team": "1. Nguyễn Thị H - CEO, 5 năm giáo viên tiếng Anh\n2. Trần Văn I - Content Creator, 3 năm làm video giáo dục",
+      "Idea": "Nền tảng học tiếng Anh online cho trẻ 6-12 tuổi qua game và video tương tác",
+      "Prototype": "20 bài học video trên YouTube, 500 subscribers",
+      "Plan": "3 tháng: Làm app. 6 tháng: 1000 học sinh",
+      "Relationships": "5 giáo viên bán thời gian"
+    },
+    "Suggestions": {
+      "Team": "- 1. Nguyễn Thị H - CEO (curriculum, partnerships)\n- 2. Trần Văn I - Content Creator\n- 3. CTO/Tech Lead - fullstack, 3+ năm (build app/platform)\n- 4. Mobile Developer - React Native hoặc Flutter\n- 5. Game Designer (part-time) - gamification cho trẻ em",
+      "Idea": "- Niche cụ thể: \"Học tiếng Anh qua truyện tranh tương tác\" hoặc \"English through games\"\n- USP: AI speech recognition để chấm phát âm trẻ em\n- Business model: Freemium (10 bài miễn phí) + subscription 199K/tháng\n- B2B: Bán cho trường học/trung tâm (bulk licenses)",
+      "Prototype": "Phase 1 (2 tháng) - Web MVP:\n- 30 bài học tương tác (không chỉ video)\n- Quiz sau mỗi bài\n- Progress tracking cho phụ huynh\n- Payment: Momo, ZaloPay\n\nPhase 2 (3 tháng) - Mobile app:\n- Gamification: points, badges, leaderboard\n- Speech recognition (Google Cloud Speech-to-Text)\n- Parent dashboard",
+      "Plan": "Tháng 1-2: Tuyển CTO, fundraise $30-50K\nTháng 3-4: Build web MVP, test với 50 trẻ (con của bạn bè, giáo viên)\nTháng 5-6: Mobile app beta, partner 3-5 trường/trung tâm, 200 học sinh\nTháng 7-9: Public launch, marketing (Facebook Ads phụ huynh), 1000 học sinh\nTháng 10-12: B2B sales, scale đến 3000 học sinh",
+      "Relationships": "- 5 giáo viên part-time (giữ nguyên)\n- Schools: 5-10 trường tiểu học (pilot program)\n- English centers: 3-5 trung tâm (partnership/reseller)\n- Content: Cambridge, Oxford (license nội dung nếu budget có)\n- Tech: Google Cloud (speech API), AWS credits\n- Investors: EdLab Asia, 500 Startups, Topica\n- Marketing: Parenting groups Facebook, edu influencers"
+    }
+  },
+  {
+    "startupId": "SUGGEST-005",
+    "description": "Fintech - ví điện tử cho freelancer",
+    "Input": {
+      "Team": "1. Lê Văn J - CEO, 7 năm banking\n2. Phạm Thị K - Product Manager, 4 năm fintech",
+      "Idea": "Ví điện tử giúp freelancer nhận thanh toán quốc tế và quản lý thu nhập",
+      "Prototype": "Business plan 30 trang, chưa có sản phẩm",
+      "Plan": "1 năm: Launch MVP. 2 năm: 10,000 users",
+      "Relationships": "Đang trao đổi với 2 ngân hàng"
+    },
+    "Suggestions": {
+      "Team": "- 1. Lê Văn J - CEO (compliance, banking partnerships)\n- 2. Phạm Thị K - Product Manager\n- 3. CTO - fintech background, 5+ năm (security critical)\n- 4. Backend Developer - Java/Python, payment systems\n- 5. Compliance Officer - hiểu luật fintech VN (bắt buộc)",
+      "Idea": "- Niche: \"Ví cho freelancer IT\" (design, dev, content) thay vì tất cả\n- Features: Multi-currency wallet, invoice generation, tax calculation\n- USP: Tích hợp Upwork/Fiverr, tự động convert USD→VND với rate tốt\n- Revenue: 1-2% transaction fee + premium features (accounting, tax report) 99K/tháng\n- Licensing: Cần giấy phép trung gian thanh toán từ SBV",
+      "Prototype": "Phase 1 (4 tháng) - Core features:\n- User registration, KYC (eKYC)\n- Multi-currency wallet (USD, VND)\n- Bank transfer (domestic)\n- Transaction history\n\nPhase 2 (3 tháng):\n- International transfer (partner với Wise/Payoneer)\n- Invoice generator\n- Tax calculator\n\nTech: Java Spring Boot, PostgreSQL, AWS, KYC API (VNPT, FPT)",
+      "Plan": "Tháng 1-3: Tuyển CTO + dev, apply giấy phép SBV (6-12 tháng), fundraise $200-300K\nTháng 4-7: Build MVP, SBV approval (parallel track)\nTháng 8-10: Beta với 100 freelancers (IT groups), collect feedback\nTháng 11-12: Public launch (nếu có license), 1000 users\nNăm 2: B2B (freelance platforms, agencies), 10,000 users\n\nRealistic: 18-24 tháng (không phải 12 tháng) vì licensing",
+      "Relationships": "- Banks: 2 ngân hàng (giữ nguyên) + Vietcombank, Techcombank (settlement accounts)\n- Payment: Wise, Payoneer (international transfers)\n- KYC: VNPT, FPT eKYC services\n- SBV: Apply giấy phép trung gian thanh toán\n- Freelance platforms: Upwork, Fiverr, TopDev (integration or partnership)\n- Communities: Vietnam Freelancers group, IT groups\n- Investors: Nextrans, 500 Fintech, Do Ventures\n- Legal: Fintech law firm (VILAF, YKVN)"
+    }
+  },
+  {
+    "startupId": "SUGGEST-006",
+    "description": "Healthtech - đặt lịch khám bệnh online",
+    "Input": {
+      "Team": "1. Vũ Thị L - CEO, bác sĩ 10 năm\n2. Hoàng Văn M - Marketing Manager, 5 năm",
+      "Idea": "App đặt lịch khám bác sĩ online, giảm thời gian chờ tại bệnh viện",
+      "Prototype": "Landing page với form đăng ký, 200 email subscribers",
+      "Plan": "6 tháng: App hoàn chỉnh. 1 năm: 50 bác sĩ, 5000 bệnh nhân",
+      "Relationships": "3 bác sĩ bạn bè đồng ý tham gia"
+    },
+    "Suggestions": {
+      "Team": "- 1. Vũ Thị L - CEO (doctor partnerships, medical content)\n- 2. Hoàng Văn M - Marketing Manager\n- 3. CTO - healthcare tech experience (HIPAA-like compliance)\n- 4. Mobile Developer - iOS + Android (React Native)\n- 5. Backend Developer - API, database, security\n- 6. Operations Manager (Q2) - onboard doctors, quality control",
+      "Idea": "- Niche: \"Đặt lịch bác sĩ chuyên khoa\" (tim mạch, tiêu hóa, da liễu) thay vì general\n- USP: Video consultation + e-prescription + deliver thuốc (partner pharmacy)\n- Features: Patient records, appointment reminders, insurance integration\n- Revenue: Commission 15-20% từ bác sĩ + booking fee 20K/lần\n- B2B: Corporate health checkup packages",
+      "Prototype": "Phase 1 (3 tháng) - Booking MVP:\n- Doctor profiles, specialties, availability\n- Booking calendar\n- Payment (Momo, ZaloPay, insurance)\n- SMS/email reminders\n\nPhase 2 (3 tháng):\n- Video consultation (Twilio, Agora)\n- E-prescription\n- Patient health records (secure, encrypted)\n- Ratings & reviews\n\nTech: React Native, Node.js, MongoDB, AWS HIPAA-compliant hosting",
+      "Plan": "Tháng 1-2: Tuyển CTO + devs, fundraise $100-150K\nTháng 3-5: Build MVP\nTháng 6: Beta với 10 bác sĩ (bạn CEO + referrals), 100 bệnh nhân test\nTháng 7-9: Onboard 50 bác sĩ (focus 3-5 chuyên khoa), marketing, 1000 bookings\nTháng 10-12: Scale đến 100 bác sĩ, 5000 bệnh nhân, B2B pilots (3-5 companies)\n\nRealistic: 9-12 tháng cho 50 bác sĩ, 5000 bệnh nhân",
+      "Relationships": "- Doctors: 3 bác sĩ (giữ nguyên) + recruit 50 (qua hội bác sĩ, hospitals)\n- Hospitals/Clinics: 5-10 phòng khám tư (partnership)\n- Pharmacies: Guardian, Pharmacity (deliver thuốc)\n- Insurance: Bảo Việt, Prudential, Manulife (payment integration)\n- Labs: Medlatec, Diag (book xét nghiệm)\n- Corporate: 10 companies (health checkup packages)\n- Investors: 500 Startups, Genesia Ventures (healthtech focus)\n- Regulatory: Ministry of Health (compliance, e-prescription approval)"
+    }
+  },
+  {
+    "startupId": "SUGGEST-007",
+    "description": "Logistics - giao hàng nội thành nhanh",
+    "Input": {
+      "Team": "1. Đỗ Văn N - CEO, 8 năm logistics\n2. Nguyễn Thị O - Operations, 5 năm supply chain\n3. Trần Văn P - Tech Lead, 4 năm backend",
+      "Idea": "Dịch vụ giao hàng nội thành trong 2 giờ cho shop online và cá nhân",
+      "Prototype": "Google Sheet tracking orders, 20 shipper làm việc, 500 đơn/tháng",
+      "Plan": "Xây app để tự động hóa. Mở rộng 3 quận mới",
+      "Relationships": "20 shipper, 30 shop online"
+    },
+    "Suggestions": {
+      "Team": "- 1. Đỗ Văn N - CEO\n- 2. Nguyễn Thị O - Operations (manage shippers, routes)\n- 3. Trần Văn P - Tech Lead\n- 4. Mobile Developer - shipper app (React Native/Flutter)\n- 5. Backend Developer - support Tech Lead\n- 6. Fleet Manager (Q2) - recruit, train shippers khi scale",
+      "Idea": "- Niche: \"Same-day delivery cho e-commerce\" hoặc \"2-hour delivery cho F&B, grocery\"\n- USP: 2 giờ guaranteed, live tracking, cheaper than Grab (20-30K vs 25-40K)\n- Revenue: Per-delivery fee 20-30K + subscription cho shops (499K/tháng unlimited)\n- B2B focus: E-commerce shops, F&B, pharmacies\n- Tech: Route optimization AI để giảm cost",
+      "Prototype": "Phase 1 (2 tháng) - Core app:\n- Customer app: Order, tracking, payment\n- Shipper app: Accept orders, navigation, POD (proof of delivery)\n- Admin dashboard: Dispatch, route optimization\n\nPhase 2 (2 tháng):\n- Shop portal: Bulk orders, API integration (Shopify, WooCommerce)\n- Auto-dispatch algorithm\n- Analytics: Cost per delivery, shipper performance\n\nTech: React Native, Node.js, Google Maps API, PostgreSQL",
+      "Plan": "Tháng 1-2: Build MVP apps (customer + shipper + admin)\nTháng 3: Migrate từ Google Sheet sang app, train 20 shippers, test 2 tuần\nTháng 4-5: Optimize app, improve dispatch, onboard +30 shops (total 60), +30 shippers\nTháng 6: Expand 2 quận mới (không phải 3), +20 shippers, 2000 đơn/tháng\nTháng 7-9: Fundraise $200-300K, scale đến 100 shippers, 5 quận, 5000 đơn/tháng",
+      "Relationships": "- 20 shippers (giữ nguyên) + recruit +80 (target 100 by Q3)\n- 30 shop online (giữ nguyên) + onboard +70 (total 100)\n- E-commerce platforms: Shopee, Lazada (fulfillment partner)\n- F&B: 20 restaurants (backup cho shipper idle time)\n- Insurance: Bảo hiểm hàng hóa cho deliveries\n- Tech: Google Maps API, Route optimization (OptimoRoute, Circuit)\n- Investors: Nextrans (logistics focus), 500 Startups\n- Vehicle leasing: Cho shippers thuê xe máy (nếu không có)"
+    }
+  },
+  {
+    "startupId": "SUGGEST-008",
+    "description": "Proptech - tìm thuê nhà trọ cho sinh viên",
+    "Input": {
+      "Team": "1. Lý Thị Q - CEO, 6 năm môi giới BĐS\n2. Vũ Văn R - Designer, 3 năm UI/UX",
+      "Idea": "App tìm phòng trọ gần trường đại học với giá rẻ và đánh giá chủ nhà",
+      "Prototype": "Facebook group 5000 members, post phòng trọ hàng ngày",
+      "Plan": "Làm app trong 6 tháng. Thu phí chủ nhà đăng tin",
+      "Relationships": "200 chủ nhà trong group"
+    },
+    "Suggestions": {
+      "Team": "- 1. Lý Thị Q - CEO (landlord partnerships, business dev)\n- 2. Vũ Văn R - Designer\n- 3. CTO/Tech Lead - web + mobile\n- 4. Mobile Developer - React Native (sinh viên dùng mobile nhiều)\n- 5. Content Moderator (part-time) - duyệt listings, handle disputes",
+      "Idea": "- Niche: \"Phòng trọ cho sinh viên\" around top 10 universities (ĐHQG, Bách Khoa, etc)\n- USP: Verified listings (CEO thăm thực tế), student reviews, roommate matching\n- Features: 360° photos, price comparison, near amenities (cơm, quán nước)\n- Revenue: Chủ nhà free post, featured listings 200K/tháng, commission 50% tháng đầu\n- Community: Forum cho sinh viên (mua bán, tìm bạn cùng phòng)",
+      "Prototype": "Phase 1 (3 tháng) - Web + mobile:\n- Listings: Search, filter (price, location, amenities)\n- Landlord portal: Post, manage listings\n- Student profiles, saved searches\n- Chat: Student ↔ landlord\n- Reviews & ratings\n\nPhase 2 (2 tháng):\n- Roommate matching (survey preferences)\n- Map view với nearby schools\n- Payment: Deposit qua app (escrow)\n\nTech: React Native, Node.js, MongoDB, Google Maps",
+      "Plan": "Tháng 1-2: Tuyển CTO + dev, fundraise $50K (angels hoặc accelerator)\nTháng 3-5: Build app MVP\nTháng 6: Migrate Facebook group → app, incentivize (free featured listings 3 tháng)\nTháng 7-8: Marketing (Facebook Ads target sinh viên), onboard 500 listings\nTháng 9-12: Scale đến 2000 listings, 10,000 students, 5 universities coverage",
+      "Relationships": "- 200 chủ nhà (giữ nguyên) + recruit +300 (total 500 by Q4)\n- Universities: Partner với 5-10 trường (poster, student orientation)\n- Student groups: 20 groups Facebook các trường (cross-promote)\n- Real estate: Century21, Cenhomes (refer students, earn commission)\n- Utilities: Điện nước, internet providers (bundle deals)\n- Moving: Xe tải chuyển nhà (referral partnership)\n- Investors: Proptech funds, 500 Startups, Do Ventures\n- Media: Student newspapers, university portals"
+    }
+  }
+]
