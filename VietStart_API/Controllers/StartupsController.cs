@@ -185,9 +185,108 @@ namespace VietStart.API.Controllers
             return CreatedAtAction(nameof(GetStartup), new { id = startup.Id }, startupDto);
         }
 
-        // PUT: api/startups/{id}
+        // POST: api/startups/multi
+        //[Authorize(Roles = "Admin,Client")]
+        [HttpPost("multi")]
+        public async Task<ActionResult> CreateMultiStartup([FromBody] CreateMultiStartUpDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var results = new List<object>();
+
+            foreach (var dto in request.Startups)
+            {
+                try
+                {
+                    // Check UserId FE gửi lên
+                    if (string.IsNullOrWhiteSpace(dto.UserId))
+                    {
+                        results.Add(new
+                        {
+                            Success = false,
+                            Error = "UserId is required",
+                            Data = dto
+                        });
+                        continue;
+                    }
+
+                    var userId = dto.UserId;
+
+                    // Check category
+                    var category = await _unitOfWork.Categories
+                        .FirstOrDefaultAsync(c => c.Id == dto.CategoryId && c.DeletedAt == null);
+
+                    if (category == null)
+                    {
+                        results.Add(new
+                        {
+                            Success = false,
+                            Error = "Danh mục không tồn tại",
+                            Data = dto
+                        });
+                        continue;
+                    }
+
+                    // Map → entity
+                    var startup = _mapper.Map<StartUp>(dto);
+
+                    startup.UserId = userId;
+                    startup.CreatedAt = DateTime.UtcNow;
+                    startup.CreatedBy = userId;
+
+                    // Embedding
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(startup.Team))
+                        {
+                            startup.TeamEmbedding = await _embeddingService.GetEmbeddingAsync(startup.Team);
+                        }
+                    }
+                    catch { }
+
+                    // Save
+                    await _unitOfWork.StartUps.AddAsync(startup);
+
+                    // Build result item
+                    results.Add(new
+                    {
+                        Success = true,
+                        Startup = new
+                        {
+                            startup.Id,
+                            startup.Team,
+                            startup.Idea,
+                            startup.Prototype,
+                            startup.Plan,
+                            startup.Relationship,
+                            startup.Privacy,
+                            startup.UserId,
+                            CategoryId = category.Id,
+                            CategoryName = category.Name,
+                            startup.CreatedAt
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new
+                    {
+                        Success = false,
+                        Error = ex.Message,
+                        Data = dto
+                    });
+                }
+            }
+
+            return Ok(results);
+        }
+
+
+
+        // POST: api/startups/{id}/update
         [Authorize(Roles = "Admin,Client")]
-        [HttpPut("{id}")]
+        [HttpPost("{id}/update")]
         public async Task<IActionResult> UpdateStartup(int id, [FromBody] UpdateStartUpDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -215,9 +314,9 @@ namespace VietStart.API.Controllers
             return Ok(new { Message = "Cập nhật startup thành công" });
         }
 
-        // DELETE: api/startups/{id}
+        // POST: api/startups/{id}/delete
         [Authorize(Roles = "Admin,Client")]
-        [HttpDelete("{id}")]
+        [HttpPost("{id}/delete")]
         public async Task<IActionResult> DeleteStartup(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

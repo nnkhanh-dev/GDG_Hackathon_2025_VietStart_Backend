@@ -170,10 +170,10 @@ namespace VietStart.API.Controllers
             return Ok(new { Data = inviteDtos, Total = inviteDtos.Count });
         }
 
-        // PUT: api/teamstartups/{id}/accept-invite
+        // POST: api/teamstartups/{id}/accept-invite
         // Người được mời đồng ý lời mời → chuyển sang trạng thái Dealing (bắt đầu nhắn tin)
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/accept-invite")]
+        [HttpPost("{id}/accept-invite")]
         public async Task<IActionResult> AcceptInvite(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -199,10 +199,10 @@ namespace VietStart.API.Controllers
             });
         }
 
-        // PUT: api/teamstartups/{id}/reject-invite
+        // POST: api/teamstartups/{id}/reject-invite
         // Người được mời từ chối lời mời
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/reject-invite")]
+        [HttpPost("{id}/reject-invite")]
         public async Task<IActionResult> RejectInvite(int id, [FromBody] UpdateJoinRequestStatusDto? rejectDto = null)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -229,10 +229,10 @@ namespace VietStart.API.Controllers
             });
         }
 
-        // PUT: api/teamstartups/{id}/confirm-success
+        // POST: api/teamstartups/{id}/confirm-success
         // Chủ startup xác nhận thành công → người được mời vào nhóm chat chung
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/confirm-success")]
+        [HttpPost("{id}/confirm-success")]
         public async Task<IActionResult> ConfirmSuccess(int id)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -262,10 +262,10 @@ namespace VietStart.API.Controllers
             });
         }
 
-        // PUT: api/teamstartups/{id}/cancel-dealing
+        // POST: api/teamstartups/{id}/cancel-dealing
         // Chủ startup hủy bỏ quá trình trao đổi và chuyển về Rejected
         [Authorize(Roles = "Client")]
-        [HttpPut("{id}/cancel-dealing")]
+        [HttpPost("{id}/cancel-dealing")]
         public async Task<IActionResult> CancelDealing(int id, [FromBody] UpdateJoinRequestStatusDto? cancelDto = null)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -345,10 +345,10 @@ namespace VietStart.API.Controllers
             return Ok(new { Data = memberDtos, Total = memberDtos.Count });
         }
 
-        // DELETE: api/teamstartups/{id}/remove-member
+        // POST: api/teamstartups/{id}/remove-member
         // Chủ startup xóa thành viên khỏi nhóm
         [Authorize(Roles = "Client")]
-        [HttpDelete("{id}/remove-member")]
+        [HttpPost("{id}/remove-member")]
         public async Task<IActionResult> RemoveMember(int id)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -370,10 +370,10 @@ namespace VietStart.API.Controllers
             return Ok(new { Message = "Đã xóa thành viên khỏi startup" });
         }
 
-        // DELETE: api/teamstartups/{id}/cancel-invite
+        // POST: api/teamstartups/{id}/cancel-invite
         // Chủ startup hủy lời mời đã gửi (khi còn ở trạng thái Pending)
         [Authorize(Roles = "Client")]
-        [HttpDelete("{id}/cancel-invite")]
+        [HttpPost("{id}/cancel-invite")]
         public async Task<IActionResult> CancelInvite(int id)
         {
             var ownerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

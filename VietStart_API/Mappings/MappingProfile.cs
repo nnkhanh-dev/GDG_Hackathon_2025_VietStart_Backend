@@ -22,6 +22,7 @@ namespace VietStart_API.Mappings
             CreateMap<StartUp, StartUpDto>();
             CreateMap<CreateStartUpDto, StartUp>();
             CreateMap<UpdateStartUpDto, StartUp>();
+            CreateMap<CreateStartUpDtos, StartUp>();
 
             // StartUp Detail mapping with all related data
             CreateMap<StartUp, StartUpDetailDto>()
@@ -74,6 +75,10 @@ namespace VietStart_API.Mappings
             CreateMap<RoleEmbadding, RoleEmbaddingDto>();
             CreateMap<CreateRoleEmbaddingDto, RoleEmbadding>();
             CreateMap<UpdateRoleEmbaddingDto, RoleEmbadding>();
+
+
+
+            
         }
     }
 }

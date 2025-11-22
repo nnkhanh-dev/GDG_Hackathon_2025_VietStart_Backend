@@ -133,9 +133,9 @@ namespace VietStart.API.Controllers
             return CreatedAtAction(nameof(GetReact), new { id = react.Id }, reactDto);
         }
 
-        // PUT: api/reacts/{id}
+        // POST: api/reacts/{id}/update
         [Authorize(Roles = "Admin,Client")]
-        [HttpPut("{id}")]
+        [HttpPost("{id}/update")]
         public async Task<IActionResult> UpdateReact(int id, [FromBody] UpdateReactDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -157,9 +157,9 @@ namespace VietStart.API.Controllers
             return Ok(new { Message = "Cập nhật phản ứng thành công" });
         }
 
-        // DELETE: api/reacts/{id}
+        // POST: api/reacts/{id}/delete
         [Authorize(Roles = "Admin,Client")]
-        [HttpDelete("{id}")]
+        [HttpPost("{id}/delete")]
         public async Task<IActionResult> DeleteReact(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

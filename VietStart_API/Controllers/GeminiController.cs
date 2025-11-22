@@ -1127,9 +1127,8 @@ Relationships: {(string.IsNullOrWhiteSpace(info.Relationships) ? "[THIẾU]" : i
 
 ⚙️ YÊU CẦU:
 • Phân tích liên kết giữa các trường
-• Đưa gợi ý cụ thể, khả thi
-• Nếu thiếu thông tin → gợi ý bổ sung
-• Nếu đã có → gợi ý cải thiện
+• Xây dựng một kết quả cụ thể mà nó đem lại hiệu quả tốt hơn
+• Nếu đã có → Xây dựng một kết quả cụ thể mà nó đem lại hiệu quả tốt hơn
 
 GỢI Ý CHO 5 LĨNH VỰC:
 
@@ -1145,11 +1144,11 @@ GỢI Ý CHO 5 LĨNH VỰC:
 
 JSON OUTPUT (chỉ trả JSON, không markdown):
 {{
-    ""Team"": ""gợi ý team (200-300 ký tự)"",
-    ""Idea"": ""gợi ý idea (200-300 ký tự)"",
-    ""Prototype"": ""gợi ý prototype (200-300 ký tự)"",
-    ""Plan"": ""gợi ý plan (200-300 ký tự)"",
-    ""Relationships"": ""gợi ý relationships (200-300 ký tự)""
+    ""Team"": ""team gợi ý (200-300 ký tự)"",
+    ""Idea"": ""idea gợi ý (200-300 ký tự)"",
+    ""Prototype"": ""prototype gợi (200-300 ký tự)"",
+    ""Plan"": ""plan gợi (200-300 ký tự)"",
+    ""Relationships"": ""relationships gợi ý (200-300 ký tự)""
 }}
 ";
 

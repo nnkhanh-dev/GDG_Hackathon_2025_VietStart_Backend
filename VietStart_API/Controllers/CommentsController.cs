@@ -132,9 +132,9 @@ namespace VietStart.API.Controllers
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, commentDto);
         }
 
-        // PUT: api/comments/{id}
+        // POST: api/comments/{id}/update
         [Authorize(Roles = "Admin,Client")]
-        [HttpPut("{id}")]
+        [HttpPost("{id}/update")]
         public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -158,9 +158,9 @@ namespace VietStart.API.Controllers
             return Ok(new { Message = "Cập nhật bình luận thành công" });
         }
 
-        // DELETE: api/comments/{id}
+        // POST: api/comments/{id}/delete
         [Authorize(Roles = "Admin,Client")]
-        [HttpDelete("{id}")]
+        [HttpPost("{id}/delete")]
         public async Task<IActionResult> DeleteComment(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

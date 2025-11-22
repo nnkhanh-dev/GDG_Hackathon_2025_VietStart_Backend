@@ -55,9 +55,9 @@ namespace VietStart.API.Controllers
             return Ok(new { Data = userDtos, Total = total });
         }
 
-        // PUT: api/users/{id}
+        // POST: api/users/{id}/update
         [Authorize(Roles = "Admin,Client")]
-        [HttpPut("{id}")]
+        [HttpPost("{id}/update")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateAppUserDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -226,9 +226,9 @@ namespace VietStart.API.Controllers
             });
         }
 
-        // DELETE: api/users/{id}
+        // POST: api/users/{id}/delete
         [Authorize(Roles = "Admin,Client")]
-        [HttpDelete("{id}")]
+        [HttpPost("{id}/delete")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

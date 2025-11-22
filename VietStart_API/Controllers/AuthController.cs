@@ -29,6 +29,84 @@ namespace VietStart_API.Controllers
         }
 
         [HttpPost]
+        [Route("Register-Multi")]
+        public async Task<IActionResult> RegisterMulti([FromBody] RegisterMultiRequestDto request)
+        {
+            var results = new List<object>();
+
+            foreach (var dto in request.Users)
+            {
+                var user = new AppUser
+                {
+                    UserName = dto.Email,
+                    Email = dto.Email,
+                    FullName = dto.FullName,
+                    Skills = dto.Skills ?? "",
+                    RolesInStartup = dto.RolesInStartup ?? "",
+                    CategoryInvests = dto.CategoryInvests ?? "",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createResult = await _userManager.CreateAsync(user, dto.Password);
+
+                if (!createResult.Succeeded)
+                {
+                    results.Add(new
+                    {
+                        Email = dto.Email,
+                        Success = false,
+                        Errors = createResult.Errors.Select(e => e.Description)
+                    });
+                    continue;
+                }
+
+                // Gán role
+                if (!await _roleManager.RoleExistsAsync("Client"))
+                    await _roleManager.CreateAsync(new IdentityRole("Client"));
+
+                await _userManager.AddToRoleAsync(user, "Client");
+
+                // Embedding
+                try
+                {
+                    bool hasEmb = false;
+
+                    if (!string.IsNullOrEmpty(user.Skills))
+                    {
+                        user.SkillsEmbadding = await _embeddingService.GetEmbeddingAsync(user.Skills);
+                        hasEmb = true;
+                    }
+                    if (!string.IsNullOrEmpty(user.RolesInStartup))
+                    {
+                        user.RolesEmbadding = await _embeddingService.GetEmbeddingAsync(user.RolesInStartup);
+                        hasEmb = true;
+                    }
+                    if (!string.IsNullOrEmpty(user.CategoryInvests))
+                    {
+                        user.CategoriesEmbadding = await _embeddingService.GetEmbeddingAsync(user.CategoryInvests);
+                        hasEmb = true;
+                    }
+
+                    if (hasEmb)
+                        await _userManager.UpdateAsync(user);
+                }
+                catch
+                {
+                    // lỗi embedding vẫn cho register
+                }
+
+                results.Add(new
+                {
+                    Email = dto.Email,
+                    Success = true
+                });
+            }
+
+            return Ok(results);
+        }
+
+
+        [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto requestDto)
         {

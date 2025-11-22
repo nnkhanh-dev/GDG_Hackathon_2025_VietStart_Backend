@@ -86,9 +86,9 @@ namespace VietStart.API.Controllers
             return CreatedAtAction(nameof(GetSharesByStartup), new { startupId = share.StartUpId }, shareDto);
         }
 
-        // PUT: api/shares/{userId}/{startupId}
+        // POST: api/shares/{userId}/{startupId}/update
         [Authorize(Roles = "Admin,Client")]
-        [HttpPut("{userId}/{startupId}")]
+        [HttpPost("{userId}/{startupId}/update")]
         public async Task<IActionResult> UpdateShare(string userId, int startupId, [FromBody] UpdateShareDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -112,9 +112,9 @@ namespace VietStart.API.Controllers
             return Ok(new { Message = "Cập nhật chia sẻ thành công" });
         }
 
-        // DELETE: api/shares/{userId}/{startupId}
+        // POST: api/shares/{userId}/{startupId}/delete
         [Authorize(Roles = "Admin,Client")]
-        [HttpDelete("{userId}/{startupId}")]
+        [HttpPost("{userId}/{startupId}/delete")]
         public async Task<IActionResult> DeleteShare(string userId, int startupId)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
